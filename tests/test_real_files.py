@@ -15,6 +15,13 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 XLS_SESSIONS = os.path.join(PROJECT_ROOT, '011.3.xls')
 XLSX_STAFF   = os.path.join(PROJECT_ROOT, 'Bảng tính không có tiêu đề.xlsx')
 
+# Các file Excel THẬT chứa dữ liệu bệnh nhân → gitignored, KHÔNG có trên CI.
+# Bỏ qua cả module khi thiếu file (cục bộ có file thì vẫn chạy đầy đủ).
+pytestmark = pytest.mark.skipif(
+    not (os.path.exists(XLS_SESSIONS) and os.path.exists(XLSX_STAFF)),
+    reason="Cần file Excel thật (gitignored) — không có trên CI",
+)
+
 
 # ---------- File existence ----------
 

@@ -17,3 +17,4 @@ reportlab>=4.0,<5
 
 # --- Tests ---
 pytest>=8.0
+xlwt>=1.3            # tạo file .xls trong test parity (test_deeper_audit)
