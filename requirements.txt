@@ -8,6 +8,11 @@ PyQt6>=6.5,<7
 Flask>=3.0,<4
 flask-cors>=4.0
 
+# --- Đóng gói GIAO DIỆN WEB thành .exe Chromium (desktop_web.py) ---
+# Windows: backend EdgeChromium/WebView2 (tự kéo theo pythonnet).
+# Máy đích cần WebView2 Runtime (có sẵn trên hầu hết Windows 10/11).
+pywebview>=5.0
+
 # --- Excel I/O ---
 openpyxl>=3.1,<4        # .xlsx (read + write)
 xlrd>=2.0.1,<3          # .xls legacy — 2.0+ chỉ hỗ trợ .xls (bỏ .xlsx), đúng use-case

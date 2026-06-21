@@ -34,13 +34,16 @@ _handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s
 logging.basicConfig(level=logging.INFO, handlers=[_handler])
 log = logging.getLogger('qlmaythan')
 
-app = Flask(__name__, static_folder='web', static_url_path='')
+# Thư mục web/ tuyệt đối & nhận biết đóng gói: bản .exe (pywebview/PyInstaller)
+# giải nén tài nguyên vào sys._MEIPASS; chạy mã nguồn thì cạnh server.py.
+_WEB_DIR = os.path.join(getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__))), 'web')
+app = Flask(__name__, static_folder=_WEB_DIR, static_url_path='')
 CORS(app)
 
 # ---------- Serve Frontend ----------
 @app.route('/')
 def index():
-    return send_from_directory('web', 'index.html')
+    return send_from_directory(_WEB_DIR, 'index.html')
 
 # ---------- API: Dashboard ----------
 @app.route('/api/dashboard')
