@@ -4,7 +4,7 @@ import os
 import sqlite3
 import pytest
 
-from database.backup import backup_database
+from database.backup import backup_database, list_backups, restore_backup
 
 
 def _make_db(path, rows=3):
@@ -13,6 +13,29 @@ def _make_db(path, rows=3):
     c.executemany("INSERT INTO t (v) VALUES (?)", [(f"r{i}",) for i in range(rows)])
     c.commit()
     c.close()
+
+
+def test_list_backups(tmp_path):
+    db = str(tmp_path / "s.db"); _make_db(db)
+    bdir = str(tmp_path / "b")
+    backup_database(db, bdir); backup_database(db, bdir)
+    lst = list_backups(bdir)
+    assert len(lst) == 2
+    assert all({'path', 'name', 'size', 'mtime'} <= set(x) for x in lst)
+
+
+def test_restore_backup_replaces_db(tmp_path):
+    """Khôi phục bản 3-dòng đè lên DB 4-dòng → còn 3 dòng (+ tự backup hiện trạng)."""
+    db = str(tmp_path / "live.db"); _make_db(db, rows=3)
+    bdir = str(tmp_path / "b")
+    dest = backup_database(db, bdir, keep=10)           # snapshot 3 dòng
+    c = sqlite3.connect(db); c.execute("INSERT INTO t (v) VALUES ('x')"); c.commit(); c.close()
+    assert sqlite3.connect(db).execute("SELECT COUNT(*) FROM t").fetchone()[0] == 4
+
+    restore_backup(dest, db_path=db, backups_dir=bdir)
+    assert sqlite3.connect(db).execute("SELECT COUNT(*) FROM t").fetchone()[0] == 3
+    # đã tự sao lưu hiện trạng (4 dòng) trước khi ghi đè → có thêm bản backup
+    assert len(list_backups(bdir)) >= 2
 
 
 def test_backup_creates_valid_copy(tmp_path):

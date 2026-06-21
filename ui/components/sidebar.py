@@ -71,6 +71,7 @@ class Sidebar(QWidget):
         ("📋", "Bàn giao"),
         ("💉", "Phiên ĐT"),
         ("📈", "Thống kê"),
+        ("⚙️", "Cài đặt"),
     ]
 
     def __init__(self, parent=None):

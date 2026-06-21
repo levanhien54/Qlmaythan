@@ -41,10 +41,20 @@ def _silence_msgbox(monkeypatch):
     "ui.components.data_table",
     "ui.dialogs.device_dialog",
     "ui.pages.sessions_page",
+    "ui.pages.settings_page",
+    "ui.main_window",
     "excel_import",
 ])
 def test_ui_modules_import(mod):
     importlib.import_module(mod)
+
+
+def test_settings_page_constructs_and_refreshes(qapp, temp_db):
+    """Trang Cài đặt dựng được + refresh (đếm + liệt kê backup) không crash."""
+    from ui.pages.settings_page import SettingsPage
+    p = SettingsPage()
+    p.refresh_data()
+    assert p.info_label.text() and "phiên bản" in p.info_label.text()
 
 
 # ---------- #5 DeviceDialog: năm 0 giữ nguyên ----------

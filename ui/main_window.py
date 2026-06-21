@@ -17,6 +17,7 @@ from ui.pages.maintenance_page import MaintenancePage
 from ui.pages.handover_page import HandoverPage
 from ui.pages.sessions_page import SessionsPage
 from ui.pages.statistics_page import StatisticsPage
+from ui.pages.settings_page import SettingsPage
 
 
 class MainWindow(QMainWindow):
@@ -61,6 +62,7 @@ class MainWindow(QMainWindow):
         self.page_handover = HandoverPage()
         self.page_sessions = SessionsPage()
         self.page_statistics = StatisticsPage()
+        self.page_settings = SettingsPage()
 
         self.pages = [
             self.page_dashboard,
@@ -70,6 +72,7 @@ class MainWindow(QMainWindow):
             self.page_handover,
             self.page_sessions,
             self.page_statistics,
+            self.page_settings,
         ]
 
         for page in self.pages:

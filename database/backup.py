@@ -62,6 +62,48 @@ def _rotate(backups_dir: str, keep: int) -> None:
             pass
 
 
+def list_backups(backups_dir: str = BACKUP_DIR) -> list:
+    """Danh sách bản sao lưu (mới nhất trước): path, name, size, mtime."""
+    out = []
+    for f in sorted(glob.glob(os.path.join(backups_dir, f"{_PREFIX}*.db")), reverse=True):
+        try:
+            out.append({'path': f, 'name': os.path.basename(f),
+                        'size': os.path.getsize(f), 'mtime': os.path.getmtime(f)})
+        except OSError:
+            pass
+    return out
+
+
+def restore_backup(backup_path: str, db_path: str = DB_PATH,
+                   backups_dir: str = BACKUP_DIR) -> None:
+    """Khôi phục DB từ một bản sao lưu.
+
+    An toàn: SAO LƯU hiện trạng TRƯỚC khi ghi đè, đóng kết nối, rồi thay file
+    + dọn WAL/SHM cũ. Cần khởi động lại app để nạp hoàn toàn DB mới.
+    """
+    import shutil
+    if not os.path.exists(backup_path):
+        raise FileNotFoundError(f"Không thấy bản sao lưu: {backup_path}")
+    # 1) chụp lại hiện trạng (phòng khi khôi phục nhầm)
+    if os.path.exists(db_path):
+        backup_database(db_path, backups_dir)
+    # 2) đóng kết nối hiện tại (giải phóng file)
+    try:
+        from database.connection import db as _db
+        _db.close()
+    except Exception:
+        pass
+    # 3) ghi đè + dọn WAL/SHM
+    shutil.copy2(backup_path, db_path)
+    for ext in ('-wal', '-shm'):
+        p = db_path + ext
+        if os.path.exists(p):
+            try:
+                os.remove(p)
+            except OSError:
+                pass
+
+
 def safe_backup_on_startup() -> str | None:
     """Sao lưu khi khởi động, KHÔNG bao giờ làm hỏng việc khởi động nếu lỗi."""
     try:
