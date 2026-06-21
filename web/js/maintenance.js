@@ -48,8 +48,8 @@ async function filterMaint() {
             <td>${esc(r.ngay_thuc_hien)}</td><td>${esc(r.nguoi_thuc_hien_ten)}</td>
             <td title="${esc(r.mo_ta)}">${esc((r.mo_ta||'').substring(0,40))}</td>
             <td>${statusBadge(r.trang_thai)}</td>
-            <td class="actions"><button class="btn btn-edit" onclick="editMaint(${r.id})">✏️</button>
-            <button class="btn btn-danger" onclick="deleteMaint(${r.id})">🗑️</button></td>
+            <td class="actions"><button class="btn btn-edit" aria-label="Sửa" title="Sửa" onclick="editMaint(${r.id})">✏️</button>
+            <button class="btn btn-danger" aria-label="Xóa" title="Xóa" onclick="deleteMaint(${r.id})">🗑️</button></td>
         </tr>`,
         'phiếu'
     );

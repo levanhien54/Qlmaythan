@@ -373,6 +373,16 @@ function ssVal(id) {
     return el ? el.value : '';
 }
 
+// A11y: phần tử .clickable (thẻ card/hàng/cảnh báo) kích hoạt bằng Enter/Space
+// như nút thật. Cần kèm tabindex="0" role="button" trên phần tử đó.
+document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ')
+        && e.target.classList && e.target.classList.contains('clickable')) {
+        e.preventDefault();
+        e.target.click();
+    }
+});
+
 // Close dropdowns when clicking outside
 document.addEventListener('click', (e) => {
     if (!e.target.closest('.ss-wrapper')) {

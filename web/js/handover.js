@@ -61,8 +61,8 @@ async function filterHandover() {
             <td>${statusBadge(r.tinh_trang_may||'')}</td>
             <td style="text-align:center;font-weight:600">${r.tan_suat||0}</td>
             <td title="${esc(r.ghi_chu)}">${esc((r.ghi_chu||'').substring(0,40))}</td>
-            <td class="actions"><button class="btn btn-edit" onclick="editHandover(${r.id})">✏️</button>
-            <button class="btn btn-danger" onclick="deleteHandover(${r.id})">🗑️</button></td>
+            <td class="actions"><button class="btn btn-edit" aria-label="Sửa" title="Sửa" onclick="editHandover(${r.id})">✏️</button>
+            <button class="btn btn-danger" aria-label="Xóa" title="Xóa" onclick="deleteHandover(${r.id})">🗑️</button></td>
         </tr>`;
         },
         'phiếu'

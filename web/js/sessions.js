@@ -48,8 +48,8 @@ async function filterSessions() {
             <td>${esc((r.ngay_ket_thuc||'').substring(0,16))}</td>
             <td>${esc(r.ptv_chinh_ten)}</td><td>${esc(r.phu_1_ten)}</td>
             <td>${esc(r.may_thuc_hien)}</td>
-            <td class="actions"><button class="btn btn-edit" onclick="editSession(${r.id})">✏️</button>
-            <button class="btn btn-danger" onclick="deleteSession(${r.id})">🗑️</button></td>
+            <td class="actions"><button class="btn btn-edit" aria-label="Sửa" title="Sửa" onclick="editSession(${r.id})">✏️</button>
+            <button class="btn btn-danger" aria-label="Xóa" title="Xóa" onclick="deleteSession(${r.id})">🗑️</button></td>
         </tr>`,
         'hoạt động'
     );

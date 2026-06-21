@@ -44,8 +44,8 @@ async function filterSettDevices() {
             <td>${esc(r.so_may)}</td><td>${r.nam_su_dung||''}</td><td>${esc(r.nguoi_quan_ly_ten)}</td>
             <td>${statusBadge(r.tinh_trang)}</td>
             <td class="actions">
-                <button class="btn btn-edit" onclick="editSettDevice(${r.id})">✏️</button>
-                <button class="btn btn-danger" onclick="deleteSettDevice(${r.id})">🗑️</button>
+                <button class="btn btn-edit" aria-label="Sửa" title="Sửa" onclick="editSettDevice(${r.id})">✏️</button>
+                <button class="btn btn-danger" aria-label="Xóa" title="Xóa" onclick="deleteSettDevice(${r.id})">🗑️</button>
             </td>
         </tr>`,
         'thiết bị'

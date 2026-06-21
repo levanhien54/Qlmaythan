@@ -927,3 +927,25 @@ tbody tr:nth-child(even):hover { background: var(--bg-hover); }
     .summary-grid { grid-template-columns: 1fr; }
     .detail-info-grid { grid-template-columns: 1fr; }
 }
+
+/* ========== ACCESSIBILITY ========== */
+/* Focus rõ ràng khi điều hướng bằng bàn phím (Tab). :focus-visible chỉ hiện
+   viền khi dùng phím, không hiện khi bấm chuột. */
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+.nav-btn:focus-visible,
+.clickable:focus-visible,
+.device-link:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible,
+[role="button"]:focus-visible {
+    outline: 2px solid #4da3ff;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+.clickable[role="button"], .device-link { cursor: pointer; }
+/* Ẩn trực quan nhưng screen reader vẫn đọc */
+.sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}

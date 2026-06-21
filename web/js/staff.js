@@ -36,8 +36,8 @@ async function filterStaff() {
         (r, i) => `<tr>
             <td>${i+1}</td><td>${esc(r.ho_ten)}</td><td>${esc(r.chuc_vu_trinh_do)}</td>
             <td class="actions">
-                <button class="btn btn-edit" onclick="editStaff(${r.id})">✏️</button>
-                <button class="btn btn-danger" onclick="deleteStaff(${r.id})">🗑️</button>
+                <button class="btn btn-edit" aria-label="Sửa" title="Sửa" onclick="editStaff(${r.id})">✏️</button>
+                <button class="btn btn-danger" aria-label="Xóa" title="Xóa" onclick="deleteStaff(${r.id})">🗑️</button>
             </td>
         </tr>`,
         'nhân viên'

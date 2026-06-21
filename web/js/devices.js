@@ -47,7 +47,7 @@ async function filterDevices() {
             _devStats.totalSessions += (r.so_phien || 0);
             return `<tr>
                 <td>${i+1}</td>
-                <td><a class="device-link" onclick="viewDevice(${r.id})">${esc(r.ten_thiet_bi)}</a></td>
+                <td><a class="device-link clickable" tabindex="0" role="button" onclick="viewDevice(${r.id})">${esc(r.ten_thiet_bi)}</a></td>
                 <td>${esc(r.model)}</td><td>${esc(r.hang_san_xuat)}</td>
                 <td>${esc(r.so_may)}</td><td>${r.nam_su_dung||''}</td><td>${esc(r.nguoi_quan_ly_ten)}</td>
                 <td>${statusBadge(r.tinh_trang)}</td><td>${r.so_phien||0}</td>

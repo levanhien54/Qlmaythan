@@ -37,10 +37,10 @@ async function renderDashboard(el) {
     el.innerHTML = `
         <h1 class="page-title">📊 Dashboard — Tổng quan hệ thống</h1>
         <div class="stats-grid">
-            <div class="stat-card blue clickable" onclick="goToDevices('','status')"><span class="stat-icon">🖥️</span><div class="stat-info"><div class="stat-value">${d.total}</div><div class="stat-label">Tổng thiết bị</div></div></div>
-            <div class="stat-card green clickable" onclick="goToDevices('Hoạt động bình thường','status')"><span class="stat-icon">✅</span><div class="stat-info"><div class="stat-value">${d.active}</div><div class="stat-label">Hoạt động</div></div></div>
-            <div class="stat-card red clickable" onclick="goToDevices('Báo lỗi','status')"><span class="stat-icon">⚠️</span><div class="stat-info"><div class="stat-value">${d.error}</div><div class="stat-label">Báo lỗi / Hỏng</div></div></div>
-            <div class="stat-card yellow clickable" onclick="navigate('sessions')"><span class="stat-icon">📋</span><div class="stat-info"><div class="stat-value">${d.sessions_today}</div><div class="stat-label">Số phiên hôm nay</div></div></div>
+            <div class="stat-card blue clickable" tabindex="0" role="button" onclick="goToDevices('','status')"><span class="stat-icon">🖥️</span><div class="stat-info"><div class="stat-value">${d.total}</div><div class="stat-label">Tổng thiết bị</div></div></div>
+            <div class="stat-card green clickable" tabindex="0" role="button" onclick="goToDevices('Hoạt động bình thường','status')"><span class="stat-icon">✅</span><div class="stat-info"><div class="stat-value">${d.active}</div><div class="stat-label">Hoạt động</div></div></div>
+            <div class="stat-card red clickable" tabindex="0" role="button" onclick="goToDevices('Báo lỗi','status')"><span class="stat-icon">⚠️</span><div class="stat-info"><div class="stat-value">${d.error}</div><div class="stat-label">Báo lỗi / Hỏng</div></div></div>
+            <div class="stat-card yellow clickable" tabindex="0" role="button" onclick="navigate('sessions')"><span class="stat-icon">📋</span><div class="stat-info"><div class="stat-value">${d.sessions_today}</div><div class="stat-label">Số phiên hôm nay</div></div></div>
         </div>
         <div class="charts-grid">
             <div class="chart-card">
@@ -54,7 +54,7 @@ async function renderDashboard(el) {
                     });
                     return sorted.map(([k,v]) => {
                         const c = colorMap[k] || '#00c853';
-                        return `<div class="bar-row clickable" onclick="goToDevices('${STATUS_FILTER_MAP[k]||k}','status')">
+                        return `<div class="bar-row clickable" tabindex="0" role="button" onclick="goToDevices('${STATUS_FILTER_MAP[k]||k}','status')">
                             <div class="bar-label">${k}</div>
                             <div class="bar-track"><div class="bar-fill" style="width:${(v/maxStatus)*100}%;background:${c}">${v}</div></div>
                         </div>`;
@@ -64,7 +64,7 @@ async function renderDashboard(el) {
             <div class="chart-card">
                 <div class="chart-title">Tần suất sử dụng</div>
                 ${Object.entries(d.usage).map(([k,v], i) => `
-                    <div class="bar-row clickable" onclick="goToDevices('','status')">
+                    <div class="bar-row clickable" tabindex="0" role="button" onclick="goToDevices('','status')">
                         <div class="bar-label">${k}</div>
                         <div class="bar-track"><div class="bar-fill" style="width:${(v/maxUsage)*100}%;background:${barColors(i)}">${v}</div></div>
                     </div>
@@ -78,7 +78,7 @@ async function renderDashboard(el) {
                 if (a.type === 'error') onclick = `onclick="goToDevices('Hỏng','status')"`;
                 else if (a.type === 'warning') onclick = `onclick="goToDevices('Báo lỗi','status')"`;
                 else onclick = `onclick="navigate('maintenance')"`;
-                return `<div class="alert-item ${a.type} clickable" ${onclick}>
+                return `<div class="alert-item ${a.type} clickable" tabindex="0" role="button" ${onclick}>
                     ${a.type==='error'?'🔴':a.type==='warning'?'🟡':'🔵'} ${esc(a.msg)}
                 </div>`;
             }).join('') : '<div style="color:var(--text-muted);padding:8px">✅ Không có cảnh báo.</div>'}
