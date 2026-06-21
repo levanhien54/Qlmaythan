@@ -14,7 +14,6 @@ KHÔNG đóng gói dữ liệu bệnh nhân.
 import sys
 import io
 import os
-import socket
 import threading
 import time
 
@@ -33,13 +32,14 @@ if sys.platform == 'win32':
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 
-def _free_port() -> int:
-    """Xin một cổng TCP trống trên localhost (tránh đụng cổng 5000/đang dùng)."""
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('127.0.0.1', 0))
-    port = s.getsockname()[1]
-    s.close()
-    return port
+def _fatal(msg: str):
+    """Hiện hộp thoại lỗi gốc của Windows (không cần console) rồi thoát êm — để
+    người dùng thấy LÝ DO thay vì cửa sổ trắng / app im lặng."""
+    try:
+        import ctypes
+        ctypes.windll.user32.MessageBoxW(0, msg, 'Quản lý Máy Chạy Thận', 0x10)
+    except Exception:
+        print(msg)
 
 
 def _wait_until_up(port: int, timeout: float = 20.0) -> bool:
@@ -64,14 +64,22 @@ def main():
 
     # 2) Chạy Flask nội bộ trong luồng nền
     from server import app
-    port = _free_port()
+    # Bind server vào cổng TỰ DO (port 0) ngay trong LUỒNG CHÍNH: hệ điều hành cấp
+    # một cổng trống và GIỮ socket — không có khe hở TOCTOU như kiểu "xin cổng →
+    # đóng → bind lại". Lỗi bind (hiếm) nổi ngay tại đây để xử lý, thay vì chết
+    # âm thầm trong luồng nền rồi mở ra cửa sổ trắng.
+    from werkzeug.serving import make_server
+    try:
+        srv = make_server('127.0.0.1', 0, app, threaded=True)
+    except OSError as e:
+        _fatal(f'Không khởi động được server nội bộ:\n{e}')
+        return
+    port = srv.server_port
 
-    def _serve():
-        # threaded: phục vụ song song; tắt reloader/debug trong bản đóng gói
-        app.run(host='127.0.0.1', port=port, threaded=True, use_reloader=False, debug=False)
-
-    threading.Thread(target=_serve, daemon=True).start()
-    _wait_until_up(port)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    if not _wait_until_up(port):
+        _fatal('Server nội bộ không phản hồi sau khi khởi động. Vui lòng thử lại.')
+        return
 
     # 3) Mở cửa sổ Chromium (Windows: tự dùng EdgeChromium/WebView2)
     import webview

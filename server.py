@@ -665,7 +665,17 @@ if __name__ == '__main__':
         run_import()
     except Exception as e:
         print(f"[Import] {e}")
-    print("Server running at http://localhost:5000")
+    _port = int(os.environ.get('PORT', '5000'))
+    # Pre-flight: cổng đang bị chiếm → báo RÕ thay vì lỗi socket khó hiểu rồi exit(1)
+    import socket as _sock
+    _probe = _sock.socket(_sock.AF_INET, _sock.SOCK_STREAM)
+    if _probe.connect_ex(('127.0.0.1', _port)) == 0:
+        _probe.close()
+        print(f"[Lỗi] Cổng {_port} đang bị chiếm (đã có tiến trình lắng nghe).")
+        print(f"      → Dừng tiến trình đó, hoặc dùng cổng khác:  set PORT=5001 && python server.py")
+        sys.exit(1)
+    _probe.close()
+    print(f"Server running at http://localhost:{_port}")
     # debug TẮT mặc định: debug=True bật Werkzeug debugger (nguy cơ RCE) trên app
     # quản lý dữ liệu y tế. Bật tạm khi dev bằng: set FLASK_DEBUG=1
-    app.run(debug=os.environ.get('FLASK_DEBUG') == '1', port=5000)
+    app.run(debug=os.environ.get('FLASK_DEBUG') == '1', port=_port)
