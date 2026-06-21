@@ -19,6 +19,7 @@ from matching import (
     parse_excel_datetime,
     check_session_overlap,
     is_device_blocked,
+    is_device_warning,
     safe_str,
     find_header_row,
     build_column_mapping,
@@ -102,6 +103,7 @@ def _evaluate_row(row, ctx) -> dict:
     col = ctx['col']
     parse_datetime = ctx['parse_datetime']
     errors = []
+    warnings = []
 
     ho_ten = safe_str(col(row, 'ho_ten'))
 
@@ -169,6 +171,11 @@ def _evaluate_row(row, ctx) -> dict:
             f'Máy "{may_thuc_hien}" đang ở trạng thái "{may_status}" — '
             f'không thể nhập phiên điều trị cho máy này.'
         )
+    elif is_device_warning(may_status):
+        warnings.append(
+            f'Máy "{may_thuc_hien}" đang ở trạng thái "{may_status}" — '
+            f'kiểm tra lại trước khi nhập phiên cho máy này.'
+        )
 
     # ── VALIDATE PTV CHÍNH (NẾU CÓ) ──
     ptv_raw = safe_str(col(row, 'ptv_chinh'))
@@ -225,7 +232,6 @@ def _evaluate_row(row, ctx) -> dict:
             pass
 
     # ── A (CẢNH BÁO): cùng bệnh nhân đè giờ trên MÁY KHÁC (1 người không thể ở 2 máy) ──
-    warnings = []
     if ho_ten and ngay_bat_dau:
         _nho = ho_ten.strip().lower()
         SENT = '9999-12-31 23:59:59'

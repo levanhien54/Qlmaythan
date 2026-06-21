@@ -53,8 +53,12 @@ DATE_FORMATS = [
     '%Y/%m/%d %H:%M:%S', '%Y/%m/%d',
 ]
 
-# Trạng thái máy không cho phép nhập phiên — substring match (lowercase).
+# Trạng thái máy KHÔNG cho phép nhập phiên (chặn cứng) — substring match (lowercase).
 BLOCKED_DEVICE_STATES = ('hỏng', 'thanh lý', 'báo lỗi')
+
+# Trạng thái máy chỉ CẢNH BÁO (vẫn cho nhập) — máy tạm ngừng, có thể có phiên
+# lịch sử hợp lệ khi máy còn tốt nên không chặn cứng.
+WARN_DEVICE_STATES = ('bảo dưỡng', 'sửa chữa')
 
 # Ngưỡng tối thiểu để coi một SỐ Excel là serial NGÀY. parse_excel_datetime chỉ
 # chạy trên cột ngày (BĐ/KT) nên số trong cột này nên là serial. ~1990-01-01
@@ -218,6 +222,17 @@ def is_device_blocked(status) -> bool:
         return False
     lo = str(status).lower()
     return any(tok in lo for tok in BLOCKED_DEVICE_STATES)
+
+
+def is_device_warning(status) -> bool:
+    """True nếu trạng thái máy thuộc nhóm CẢNH BÁO (bảo dưỡng/sửa chữa) — vẫn cho
+    nhập nhưng nhắc người dùng. Trạng thái bị chặn cứng (hỏng/...) ưu tiên trước."""
+    if not status:
+        return False
+    lo = str(status).lower()
+    if any(tok in lo for tok in BLOCKED_DEVICE_STATES):
+        return False
+    return any(tok in lo for tok in WARN_DEVICE_STATES)
 
 
 def check_session_overlap(thiet_bi_id, ngay_bat_dau, ngay_ket_thuc,

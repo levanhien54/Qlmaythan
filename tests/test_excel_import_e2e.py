@@ -195,6 +195,17 @@ def test_constraint_same_patient_two_machines_warning(client, seeded):
     assert warned and any('đè giờ trên' in w for w in warned[0]['warnings'])
 
 
+def test_constraint_maintenance_device_warns_not_blocks(client, seeded):
+    """Máy 'Đang bảo dưỡng' → VẪN nhập (không loại) nhưng có CẢNH BÁO."""
+    buf = build_xlsx([make_row(
+        ho_ten='BN Bảo Dưỡng', ngay_bd='2026-04-01 08:00:00',
+        ngay_kt='2026-04-01 12:00:00', may='Máy thận Fresinius số 5')])  # seeded = 'Đang bảo dưỡng'
+    d = post_preview(client, buf).get_json()
+    assert d['valid'] == 1 and d['invalid'] == 0     # không bị loại
+    assert d['warnings'] >= 1
+    assert any('bảo dưỡng' in w.lower() for w in d['rows'][0]['warnings'])
+
+
 def test_preview_then_import_consistent(client, seeded):
     """Preview báo N hợp lệ → import thật phải success đúng N."""
     rows = [
