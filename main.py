@@ -18,10 +18,17 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from PyQt6.QtWidgets import QApplication, QSplashScreen
 from PyQt6.QtCore import Qt, QTimer
-from PyQt6.QtGui import QFont, QColor, QPainter, QPixmap
+from PyQt6.QtGui import QFont, QColor, QPainter, QPixmap, QIcon
 
 from database.models import create_all_tables
 from ui.main_window import MainWindow
+
+
+def resource_path(rel: str) -> str:
+    """Đường dẫn tài nguyên đóng gói — chạy được cả khi build .exe (PyInstaller
+    giải nén vào sys._MEIPASS) lẫn khi chạy mã nguồn."""
+    base = getattr(sys, "_MEIPASS", os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, rel)
 
 
 def create_splash() -> QSplashScreen:
@@ -52,6 +59,18 @@ def create_splash() -> QSplashScreen:
 def main():
     app = QApplication(sys.argv)
     app.setFont(QFont("Segoe UI", 12))
+
+    # Icon ứng dụng (cửa sổ + taskbar). AppUserModelID giúp Windows hiện đúng
+    # icon trên taskbar thay vì icon Python mặc định.
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("QuanLyMayThan.v1")
+        except Exception:
+            pass
+    _icon = resource_path("icon.ico")
+    if os.path.exists(_icon):
+        app.setWindowIcon(QIcon(_icon))
 
     # Show splash screen
     splash = create_splash()

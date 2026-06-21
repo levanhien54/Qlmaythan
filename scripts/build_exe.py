@@ -13,6 +13,7 @@ import sys
 import subprocess
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ICON = os.path.join(ROOT, "icon.ico")
 
 CMD = [
     sys.executable, "-m", "PyInstaller",
@@ -25,8 +26,11 @@ CMD = [
     "--hidden-import", "xlrd",
     "--hidden-import", "import_data",
     "--hidden-import", "excel_import",
-    os.path.join(ROOT, "main.py"),
 ]
+# Icon cho file .exe + đóng gói icon.ico để app set icon cửa sổ/taskbar lúc chạy
+if os.path.exists(ICON):
+    CMD += ["--icon", ICON, "--add-data", f"{ICON}{os.pathsep}."]
+CMD.append(os.path.join(ROOT, "main.py"))
 
 if __name__ == "__main__":
     print("Đang build .exe... (PyQt6 có thể mất vài phút)")
