@@ -14,11 +14,12 @@ async function renderDevices(el) {
             <input type="date" id="devDateFrom" value="${today}" onchange="filterDevices()" oninput="filterDevices()" title="Từ ngày">
             <input type="date" id="devDateTo" value="${today}" onchange="filterDevices()" oninput="filterDevices()" title="Đến ngày">
             <div class="spacer"></div>
+            <button class="btn btn-primary" onclick="addDevice()">➕ Thêm thiết bị</button>
         </div>
         <div class="table-wrapper" id="devTableWrap">
             <table><thead><tr>
                 <th>STT</th><th>Tên thiết bị</th><th>Model</th><th>Hãng SX</th>
-                <th>Số máy</th><th>Năm SĐ</th><th>Người QL</th><th>Tình trạng</th><th>Tần suất</th><th>Ghi chú</th>
+                <th>Số máy</th><th>Năm SĐ</th><th>Người QL</th><th>Tình trạng</th><th>Tần suất</th><th>Ghi chú</th><th>Thao tác</th>
             </tr></thead><tbody id="devBody"></tbody></table>
         </div>
         <div class="table-footer" id="devCount"></div>
@@ -52,6 +53,10 @@ async function filterDevices() {
                 <td>${esc(r.so_may)}</td><td>${r.nam_su_dung||''}</td><td>${esc(r.nguoi_quan_ly_ten)}</td>
                 <td>${statusBadge(r.tinh_trang)}</td><td>${r.so_phien||0}</td>
                 <td title="${esc(r.ghi_chu)}">${esc((r.ghi_chu||'').substring(0,40))}</td>
+                <td class="actions">
+                    <button class="btn btn-edit" aria-label="Sửa" title="Sửa" onclick="editDevice(${r.id})">✏️</button>
+                    <button class="btn btn-danger" aria-label="Xóa" title="Xóa" onclick="deleteDevice(${r.id})">🗑️</button>
+                </td>
             </tr>`;
         },
         'thiết bị'
@@ -141,5 +146,69 @@ async function viewDevice(id) {
     }
 }
 
-// Quản lý thiết bị (thêm/sửa/xóa) đặt ở trang "Cài đặt" (settings.js). Trang
-// Thiết bị chỉ để xem/tra cứu + xem chi tiết (viewDevice ở trên).
+// ========== DEVICE CRUD (cũng có ở Cài đặt) ==========
+async function addDevice() {
+    const cfg = await getConfig();
+    const staffData = await loadStaffData();
+    const tsOpts = Object.entries(cfg.tan_suat).map(([k,v])=>`<option value="${k}">${esc(v)}</option>`).join('');
+    openModal('➕ Thêm thiết bị', `
+        <div class="form-group"><label>Tên thiết bị *</label><input id="f_ten" placeholder="VD: Máy chạy thận Fresinius số 1"></div>
+        <div class="form-group"><label>Model</label><input id="f_model" placeholder="VD: 4008S"></div>
+        <div class="form-group"><label>Hãng/Nước SX</label><input id="f_hang" placeholder="VD: Đức"></div>
+        <div class="form-group"><label>Số máy</label><input id="f_so_may" placeholder="Serial number"></div>
+        <div class="form-group"><label>Năm SĐ</label><input type="number" id="f_nam" value="2025" min="2000" max="2030"></div>
+        <div class="form-group"><label>Tình trạng</label><select id="f_tinh_trang"><option>Hoạt động bình thường</option><option>Báo lỗi</option><option>Hỏng</option><option>Đang bảo dưỡng</option><option>Đã thanh lý</option></select></div>
+        <div class="form-group"><label>Tần suất</label><select id="f_tan_suat">${tsOpts}</select></div>
+        <div class="form-group"><label>Người quản lý</label>${searchSelect('f_ql', staffData, '🔍 Tìm nhân viên...')}</div>
+    `, async () => {
+        if (!$('#f_ten').value.trim()) return toast('Vui lòng nhập tên thiết bị', true);
+        try {
+            await api('/api/thiet-bi', { method: 'POST', body: JSON.stringify({
+                ten_thiet_bi: $('#f_ten').value.trim(), model: $('#f_model').value.trim(),
+                hang_san_xuat: $('#f_hang').value.trim(), nuoc_san_xuat: $('#f_hang').value.trim(),
+                so_may: $('#f_so_may').value.trim(), nam_su_dung: parseInt($('#f_nam').value),
+                tinh_trang: $('#f_tinh_trang').value, tan_suat_su_dung: parseInt($('#f_tan_suat').value),
+                nguoi_quan_ly_id: ssVal('f_ql') ? parseInt(ssVal('f_ql')) : null
+            })});
+            closeModal(); toast('Đã thêm thiết bị!'); filterDevices();
+        } catch (e) { toast(e.message, true); }
+    });
+}
+
+async function editDevice(id) {
+    const r = await api(`/api/thiet-bi/${id}`);
+    const cfg = await getConfig();
+    const staffData = await loadStaffData();
+    const tsOpts = Object.entries(cfg.tan_suat).map(([k,v])=>`<option value="${k}" ${k==r.tan_suat_su_dung?'selected':''}>${esc(v)}</option>`).join('');
+    openModal('✏️ Sửa thiết bị', `
+        <div class="form-group"><label>Tên thiết bị *</label><input id="f_ten" value="${esc(r.ten_thiet_bi)}"></div>
+        <div class="form-group"><label>Model</label><input id="f_model" value="${esc(r.model)}"></div>
+        <div class="form-group"><label>Hãng SX</label><input id="f_hang" value="${esc(r.hang_san_xuat)}"></div>
+        <div class="form-group"><label>Số máy</label><input id="f_so_may" value="${esc(r.so_may)}"></div>
+        <div class="form-group"><label>Năm SĐ</label><input type="number" id="f_nam" value="${r.nam_su_dung||2025}"></div>
+        <div class="form-group"><label>Tình trạng</label><select id="f_tinh_trang">
+            ${['Hoạt động bình thường','Báo lỗi','Hỏng','Đang bảo dưỡng','Đã thanh lý'].map(s=>`<option ${s===r.tinh_trang?'selected':''}>${s}</option>`).join('')}
+        </select></div>
+        <div class="form-group"><label>Tần suất</label><select id="f_tan_suat">${tsOpts}</select></div>
+        <div class="form-group"><label>Người QL</label>${searchSelect('f_ql', staffData, '🔍 Tìm nhân viên...', r.nguoi_quan_ly_id)}</div>
+    `, async () => {
+        try {
+            await api(`/api/thiet-bi/${id}`, { method: 'PUT', body: JSON.stringify({
+                ten_thiet_bi: $('#f_ten').value.trim(), model: $('#f_model').value.trim(),
+                hang_san_xuat: $('#f_hang').value.trim(), so_may: $('#f_so_may').value.trim(),
+                nam_su_dung: parseInt($('#f_nam').value), tinh_trang: $('#f_tinh_trang').value,
+                tan_suat_su_dung: parseInt($('#f_tan_suat').value),
+                nguoi_quan_ly_id: ssVal('f_ql') ? parseInt(ssVal('f_ql')) : null
+            })});
+            closeModal(); toast('Đã cập nhật!'); filterDevices();
+        } catch (e) { toast(e.message, true); }
+    });
+}
+
+async function deleteDevice(id) {
+    if (!confirm('Xóa thiết bị này?')) return;
+    try {
+        await api(`/api/thiet-bi/${id}`, { method: 'DELETE' });
+        toast('Đã xóa!'); filterDevices();
+    } catch (e) { toast(e.message, true); }
+}
