@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+*.egg-info/
+
+# Virtual envs
+venv/
+.venv/
+env/
+.env/
+
+# SQLite runtime data (DB file + WAL/SHM)
+data/*.db
+data/*.db-wal
+data/*.db-shm
+
+# Dữ liệu BỆNH NHÂN THẬT — KHÔNG đẩy lên repo công khai (bảo mật hồ sơ y tế).
+# App đọc các file này qua config.EXCEL_*; người dùng tự cấp file của mình.
+*.xls
+*.xlsx
+
+# MCP / tooling cache
+.playwright-mcp/
+
+# Build / dist
+build/
+dist/
+*.spec
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# Claude Code local overrides (team-shared settings đã commit: settings.json)
+.claude/settings.local.json
+.claude/settings.local.*

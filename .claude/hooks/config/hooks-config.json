@@ -1,0 +1,33 @@
+{
+    "disabled": false,
+    "events": {
+        "PreToolUse": {
+            "enabled": true,
+            "sound": true
+        },
+        "PostToolUse": {
+            "enabled": true,
+            "sound": true
+        },
+        "Notification": {
+            "enabled": true,
+            "sound": true
+        },
+        "Stop": {
+            "enabled": true,
+            "sound": true
+        },
+        "PreCompact": {
+            "enabled": true,
+            "sound": true
+        },
+        "SessionStart": {
+            "enabled": true,
+            "sound": true
+        },
+        "SessionEnd": {
+            "enabled": true,
+            "sound": true
+        }
+    }
+}

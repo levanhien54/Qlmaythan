@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Máy Chạy Thận — BV Đa khoa Bắc Ninh Số 2</title>
+    <meta name="description" content="Hệ thống quản lý máy chạy thận nhân tạo, bảo dưỡng, sửa chữa, tần suất sử dụng">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <span class="logo-icon">⚕️</span>
+                <span class="logo-text">QL Máy Thận</span>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-btn active" data-page="dashboard" onclick="navigate('dashboard')">
+                    <span class="nav-icon">📊</span><span class="nav-text">Dashboard</span>
+                </button>
+                <button class="nav-btn" data-page="devices" onclick="navigate('devices')">
+                    <span class="nav-icon">🖥️</span><span class="nav-text">Thiết bị</span>
+                </button>
+                <button class="nav-btn" data-page="sessions" onclick="navigate('sessions')">
+                    <span class="nav-icon">📋</span><span class="nav-text">Lịch sử HĐ</span>
+                </button>
+                <button class="nav-btn" data-page="handover" onclick="navigate('handover')">
+                    <span class="nav-icon">📋</span><span class="nav-text">Bàn giao</span>
+                </button>
+                <button class="nav-btn" data-page="maintenance" onclick="navigate('maintenance')">
+                    <span class="nav-icon">🔧</span><span class="nav-text">LS sửa chữa BD</span>
+                </button>
+                <button class="nav-btn" data-page="staff" onclick="navigate('staff')">
+                    <span class="nav-icon">👥</span><span class="nav-text">Nhân viên</span>
+                </button>
+                <button class="nav-btn" data-page="statistics" onclick="navigate('statistics')">
+                    <span class="nav-icon">📈</span><span class="nav-text">Thống kê</span>
+                </button>
+                <button class="nav-btn" data-page="settings" onclick="navigate('settings')">
+                    <span class="nav-icon">⚙️</span><span class="nav-text">Cài đặt</span>
+                </button>
+            </nav>
+            <div class="sidebar-footer">v1.0.0</div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Pages will be rendered here by JS -->
+        </main>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+        <div class="modal" id="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 id="modalTitle">Title</h2>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+                <button class="btn btn-primary" id="modalSave" onclick="saveModal()">💾 Lưu</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- JS Modules (load in order: utils → pages → router) -->
+    <script src="/js/utils.js"></script>
+    <script src="/js/dashboard.js"></script>
+    <script src="/js/devices.js"></script>
+    <script src="/js/settings.js"></script>
+    <script src="/js/staff.js"></script>
+    <script src="/js/maintenance.js"></script>
+    <script src="/js/handover.js"></script>
+    <script src="/js/sessions.js"></script>
+    <script src="/js/statistics.js"></script>
+    <script src="/app.js"></script>
+</body>
+</html>
