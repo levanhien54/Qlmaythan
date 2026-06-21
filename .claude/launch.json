@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "qlmaythan-web",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["server.py"],
+      "port": 5000,
+      "autoPort": false
+    }
+  ]
+}

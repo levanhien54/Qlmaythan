@@ -479,6 +479,30 @@ tbody tr:nth-child(even):hover { background: var(--bg-hover); }
 
 .actions { display: flex; gap: 6px; }
 
+/* Cột "Thao tác" GHIM BÊN PHẢI — luôn thấy nút Sửa/Xoá kể cả khi bảng tràn ngang.
+   Trước đây nó là cột cuối của bảng rộng (vd Thiết bị 11 cột ~1276px) nên bị đẩy ra
+   ngoài vùng nhìn của .table-wrapper → icon sửa/xoá "bị che lấp". */
+tbody td.actions {
+    position: sticky;
+    right: 0;
+    z-index: 4;
+    overflow: visible;          /* không bị cắt bởi quy tắc chung 'tbody td { overflow:hidden }' */
+    max-width: none;
+    background: var(--bg-card);
+    box-shadow: -7px 0 10px -7px rgba(0,0,0,0.55);  /* tách cột ghim khỏi nội dung cuộn dưới */
+}
+tbody tr:nth-child(even) td.actions { background: #1d1d45; }  /* khớp sọc hàng chẵn */
+tbody tr:hover td.actions { background: var(--bg-hover); }
+/* Header tương ứng — chỉ áp cho bảng CÓ cột thao tác (:has hỗ trợ Chrome/Edge hiện đại;
+   nếu trình duyệt quá cũ không hỗ trợ thì các nút trong thân bảng vẫn được ghim, chỉ tiêu
+   đề "Thao tác" không ghim — vẫn dùng được). */
+table:has(td.actions) thead th:last-child {
+    position: sticky;
+    right: 0;
+    z-index: 11;                /* trên td.actions (4) và th dính-trên (10) */
+    box-shadow: -7px 0 10px -7px rgba(0,0,0,0.55);
+}
+
 /* ========== STATUS BADGE ========== */
 .badge {
     display: inline-block;
