@@ -18,10 +18,11 @@ venv/
 env/
 .env/
 
-# SQLite runtime data (DB file + WAL/SHM)
+# SQLite runtime data (DB file + WAL/SHM + backup bản dọn dữ liệu)
 data/*.db
 data/*.db-wal
 data/*.db-shm
+data/*.bak*
 
 # Dữ liệu BỆNH NHÂN THẬT — KHÔNG đẩy lên repo công khai (bảo mật hồ sơ y tế).
 # App đọc các file này qua config.EXCEL_*; người dùng tự cấp file của mình.
