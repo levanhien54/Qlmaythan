@@ -174,6 +174,9 @@ function openModal(title, bodyHTML, saveFn) {
 function closeModal() {
     $('#modalOverlay').classList.remove('open');
     currentModalSave = null;
+    // Khôi phục footer (showInfoModal có thể đã ẩn) — tránh modal form sau mất nút Lưu.
+    const f = document.querySelector('#modal .modal-footer');
+    if (f) f.style.display = '';
 }
 
 function saveModal() {

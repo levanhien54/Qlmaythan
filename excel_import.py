@@ -326,6 +326,8 @@ def import_from_path(file_path: str) -> dict:
         raise ExcelParseError(f'Định dạng .{ext} không hỗ trợ. Chỉ chấp nhận .xls hoặc .xlsx')
     if not os.path.exists(file_path):
         raise ExcelParseError(f'File không tồn tại: {file_path}')
+    if os.path.getsize(file_path) > 50 * 1024 * 1024:
+        raise ExcelParseError('File quá lớn (>50MB)')  # ngang với giới hạn web
     with open(file_path, 'rb') as f:
         file_bytes = f.read()
     if not file_bytes:

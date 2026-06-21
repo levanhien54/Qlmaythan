@@ -45,6 +45,17 @@ def test_find_device_leading_zero_matches():
     assert id_ == 9
 
 
+def test_find_device_ambiguous_returns_none_not_guess():
+    """2 máy cùng SỐ + cùng keyword → MƠ HỒ: phải trả None, KHÔNG đoán bừa
+    (pick-first cũ gán phiên sai máy âm thầm)."""
+    devices = [
+        (1, "Máy chạy thận B.Braun số 3", "", "Hoạt động bình thường"),
+        (2, "Máy chạy thận B.Braun HDF số 3", "", "Hoạt động bình thường"),
+    ]
+    id_, raw, tt = find_device("Số 3", devices)
+    assert id_ is None, f"Phải mơ hồ (None), không gán bừa; nhận id={id_}"
+
+
 # ---------- #1 update(): whitelist cột ----------
 
 def test_update_ignores_unknown_column(temp_db):

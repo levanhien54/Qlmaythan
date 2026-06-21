@@ -380,8 +380,8 @@ def find_device(name_raw, device_list: list):
 
     if len(num_candidates) == 1:
         return num_candidates[0]
-    if len(num_candidates) > 1 and keyword:
-        # Keyword đã chọn nhưng vẫn trùng → pick first (hiếm xảy ra)
-        return num_candidates[0]
 
+    # Còn >1 ứng viên (cùng số + cùng keyword) → MƠ HỒ. KHÔNG đoán bừa (pick-first
+    # cũ gán phiên sai máy âm thầm — nguy hiểm với hồ sơ y tế). Trả None để buộc
+    # người dùng ghi rõ tên máy thay vì gán nhầm không cảnh báo.
     return None, raw, None

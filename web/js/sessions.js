@@ -164,6 +164,9 @@ async function importExcelSessions(inputEl) {
 }
 
 function showImportPreview(file, p) {
+    if (!p.rows || !p.rows.length) {
+        return toast('File không có dòng dữ liệu nào để nhập', true);
+    }
     const rowsHtml = p.rows.map(r => `<tr>
         <td style="text-align:center">${r.row}</td>
         <td style="text-align:center;color:${r.status === 'ok' ? '#00c853' : '#e94560'}">${r.status === 'ok' ? '✓' : '✕'}</td>
