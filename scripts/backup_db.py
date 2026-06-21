@@ -12,7 +12,8 @@ import sys
 import os
 import io
 
-if sys.platform == 'win32' and getattr(sys.stdout, 'encoding', '').lower() != 'utf-8':
+if (sys.platform == 'win32' and sys.stdout is not None and hasattr(sys.stdout, 'buffer')
+        and getattr(sys.stdout, 'encoding', '').lower() != 'utf-8'):
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

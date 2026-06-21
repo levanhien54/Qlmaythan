@@ -4,10 +4,15 @@ Flask REST API server for Machine Management System.
 """
 import sys, io, os
 if sys.platform == 'win32':
-    if getattr(sys.stdout, 'encoding', '').lower() != 'utf-8':
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    if getattr(sys.stderr, 'encoding', '').lower() != 'utf-8':
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    # AN TOÀN khi stdout/stderr là None (bản đóng gói không console).
+    for _name in ('stdout', 'stderr'):
+        _stream = getattr(sys, _name, None)
+        if (_stream is not None and hasattr(_stream, 'buffer')
+                and getattr(_stream, 'encoding', '').lower() != 'utf-8'):
+            try:
+                setattr(sys, _name, io.TextIOWrapper(_stream.buffer, encoding='utf-8', errors='replace'))
+            except Exception:
+                pass
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 

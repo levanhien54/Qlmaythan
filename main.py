@@ -6,12 +6,25 @@ import sys
 import io
 import os
 
-# Fix Windows console encoding for Vietnamese — idempotent: skip nếu đã UTF-8
-if sys.platform == 'win32':
-    if getattr(sys.stdout, 'encoding', '').lower() != 'utf-8':
-        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    if getattr(sys.stderr, 'encoding', '').lower() != 'utf-8':
-        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+def _fix_console_encoding():
+    """Bọc stdout/stderr về UTF-8 để in tiếng Việt.
+
+    AN TOÀN khi stdout/stderr là None: bản .exe build --windowed (không console)
+    có sys.stdout/sys.stderr = None → truy cập .buffer sẽ crash ngay khi mở app.
+    """
+    if sys.platform != 'win32':
+        return
+    for name in ('stdout', 'stderr'):
+        stream = getattr(sys, name, None)
+        if (stream is not None and hasattr(stream, 'buffer')
+                and getattr(stream, 'encoding', '').lower() != 'utf-8'):
+            try:
+                setattr(sys, name, io.TextIOWrapper(stream.buffer, encoding='utf-8', errors='replace'))
+            except Exception:
+                pass
+
+
+_fix_console_encoding()
 
 # Ensure correct path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))

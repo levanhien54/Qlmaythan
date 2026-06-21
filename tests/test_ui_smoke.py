@@ -57,6 +57,17 @@ def test_settings_page_constructs_and_refreshes(qapp, temp_db):
     assert p.info_label.text() and "phiên bản" in p.info_label.text()
 
 
+def test_fix_console_encoding_survives_none_streams(monkeypatch):
+    """Bản .exe --windowed có sys.stdout/stderr = None — _fix_console_encoding
+    KHÔNG được crash (trước đây AttributeError: NoneType.buffer khi mở exe)."""
+    import sys as _sys
+    import main
+    monkeypatch.setattr(_sys, 'platform', 'win32')
+    monkeypatch.setattr(_sys, 'stdout', None)
+    monkeypatch.setattr(_sys, 'stderr', None)
+    main._fix_console_encoding()  # phải KHÔNG raise
+
+
 # ---------- #5 DeviceDialog: năm 0 giữ nguyên ----------
 
 def test_device_dialog_year_zero_not_clamped(qapp, temp_db):
