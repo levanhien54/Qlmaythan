@@ -5,6 +5,7 @@ Uses per-thread connections to avoid SQLite threading issues.
 """
 import sqlite3
 import threading
+from contextlib import contextmanager
 from config import DB_PATH
 
 
@@ -36,6 +37,21 @@ class DatabaseConnection:
         conn = self._get_conn()
         conn.executescript(script)
         conn.commit()
+
+    @contextmanager
+    def transaction(self):
+        """Gộp nhiều thao tác ghi vào MỘT giao dịch nguyên tử.
+
+        Dùng `conn.execute(...)` bên trong (KHÔNG dùng db.execute vì nó commit
+        từng câu). Commit một lần khi thoát; rollback nếu có lỗi → tránh trạng
+        thái ghi dở (vd bàn giao hàng loạt lỗi giữa chừng)."""
+        conn = self._get_conn()
+        try:
+            yield conn
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
 
     def fetch_one(self, query: str, params: tuple = ()) -> dict | None:
         cursor = self.execute(query, params)

@@ -100,6 +100,29 @@ _UPDATABLE_COLS = {
 }
 
 
+def create_batch(device_ids: list, nguoi_giao_id: int = None,
+                 nguoi_nhan_id: int = None, ngay_ban_giao: str = None,
+                 trang_thai: str = "Đã bàn giao", ghi_chu: str = "") -> list:
+    """Tạo nhiều phiếu bàn giao trong MỘT giao dịch nguyên tử.
+
+    Hoặc tất cả thành công, hoặc không có gì (rollback) — tránh trạng thái
+    'nửa lô' khi gặp lỗi FK giữa chừng. Trả list id đã tạo.
+    Có thể raise sqlite3.IntegrityError nếu FK (thiết bị / nhân viên) không tồn tại.
+    """
+    if not device_ids:
+        return []
+    ids = []
+    with db.transaction() as conn:
+        for tb_id in device_ids:
+            cur = conn.execute("""
+                INSERT INTO ban_giao
+                (thiet_bi_id, nguoi_giao_id, nguoi_nhan_id, ngay_ban_giao, trang_thai, ghi_chu)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (tb_id, nguoi_giao_id, nguoi_nhan_id, ngay_ban_giao, trang_thai, ghi_chu))
+            ids.append(cur.lastrowid)
+    return ids
+
+
 def update(bg_id: int, **kwargs):
     """Cập nhật phiếu bàn giao (chỉ cột hợp lệ)."""
     kwargs = {k: v for k, v in kwargs.items() if k in _UPDATABLE_COLS}

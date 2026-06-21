@@ -102,8 +102,25 @@ def update(tb_id: int, **kwargs):
     )
 
 
+class DeviceHasHistoryError(Exception):
+    """Thiết bị còn lịch sử bảo dưỡng/bàn giao — chặn xóa để tránh CASCADE
+    xóa mất các bản ghi đó (an toàn dữ liệu y tế)."""
+
+
 def delete(tb_id: int):
-    """Xóa thiết bị."""
+    """Xóa thiết bị. Raise DeviceHasHistoryError nếu còn phiếu bảo dưỡng hoặc
+    bàn giao (vì FK ON DELETE CASCADE sẽ xóa luôn các bản ghi này)."""
+    bd = db.fetch_one(
+        "SELECT COUNT(*) AS c FROM bao_duong WHERE thiet_bi_id = ?", (tb_id,)
+    )["c"]
+    bg = db.fetch_one(
+        "SELECT COUNT(*) AS c FROM ban_giao WHERE thiet_bi_id = ?", (tb_id,)
+    )["c"]
+    if bd or bg:
+        raise DeviceHasHistoryError(
+            f"Thiết bị còn {bd} phiếu bảo dưỡng và {bg} phiếu bàn giao. "
+            f"Xóa sẽ mất toàn bộ lịch sử này — hãy xử lý các bản ghi đó trước."
+        )
     db.execute("DELETE FROM thiet_bi WHERE id = ?", (tb_id,))
 
 

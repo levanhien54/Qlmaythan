@@ -145,5 +145,9 @@ class DevicesPage(QWidget):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
-            thiet_bi.delete(tb_id)
+            try:
+                thiet_bi.delete(tb_id)
+            except thiet_bi.DeviceHasHistoryError as e:
+                QMessageBox.warning(self, "Không thể xóa", str(e))
+                return
             self.refresh_data()

@@ -46,6 +46,10 @@ def api_dashboard():
         alerts.append({'type':'warning','msg':f"{len(error_list)} thiet bi bao loi: " + ", ".join(r['ten_thiet_bi'] for r in error_list[:5])})
     if upcoming:
         alerts.append({'type':'info','msg':f"{len(upcoming)} phieu bao duong sap den han (7 ngay)"})
+    unmatched = phien_dieu_tri.count_unmatched()
+    if unmatched:
+        alerts.append({'type':'warning',
+                       'msg':f"{unmatched} phien chua gan may (ten thiet bi khong khop khi import) — khong vao thong ke theo may"})
     return jsonify({
         'total': total, 'active': active, 'error': error,
         'sessions_today': sessions_today,
@@ -86,7 +90,10 @@ def api_thiet_bi_update(id):
 
 @app.route('/api/thiet-bi/<int:id>', methods=['DELETE'])
 def api_thiet_bi_delete(id):
-    thiet_bi.delete(id)
+    try:
+        thiet_bi.delete(id)
+    except thiet_bi.DeviceHasHistoryError as e:
+        return jsonify({'error': str(e)}), 409
     return jsonify({'ok': True})
 
 @app.route('/api/thiet-bi/models')
@@ -121,7 +128,10 @@ def api_nhan_vien_update(id):
 
 @app.route('/api/nhan-vien/<int:id>', methods=['DELETE'])
 def api_nhan_vien_delete(id):
-    nhan_vien.delete(id)
+    try:
+        nhan_vien.delete(id)
+    except nhan_vien.StaffReferencedError as e:
+        return jsonify({'error': str(e)}), 409
     return jsonify({'ok': True})
 
 # ---------- API: Bao Duong ----------
@@ -345,17 +355,24 @@ def api_ban_giao_batch():
         skipped = [d['ten_thiet_bi'] for d in dups]
         device_ids = [tid for tid in device_ids if tid not in dup_ids]
 
-    created = []
-    for tb_id in device_ids:
-        new_id = ban_giao.create(
-            thiet_bi_id=tb_id,
+    # Tạo cả lô trong MỘT giao dịch (nguyên tử) — lỗi giữa chừng sẽ rollback
+    # toàn bộ thay vì để lại 'nửa lô'.
+    import sqlite3
+    try:
+        created = ban_giao.create_batch(
+            device_ids,
             nguoi_giao_id=nguoi_giao_id,
             nguoi_nhan_id=nguoi_nhan_id,
             ngay_ban_giao=ngay_ban_giao,
             trang_thai=trang_thai,
-            ghi_chu=ghi_chu
+            ghi_chu=ghi_chu,
         )
-        created.append(new_id)
+    except sqlite3.IntegrityError:
+        return jsonify({
+            'ok': False,
+            'error': 'Dữ liệu tham chiếu không hợp lệ (thiết bị hoặc nhân viên không tồn tại). '
+                     'Không có phiếu nào được tạo.'
+        }), 400
     return jsonify({
         'ok': True,
         'count': len(created), 'ids': created,
@@ -432,15 +449,17 @@ def api_ban_giao_export_pdf():
     # Table data
     table_data = [header_row]
     for i, r in enumerate(rows):
+        # `or ''`: cột join có thể NULL (vd chưa có người giao/nhận) → Paragraph(None)
+        # làm reportlab crash 500. Quy mọi giá trị về chuỗi an toàn.
         table_data.append([
             Paragraph(str(i+1), cell_style),
-            Paragraph(r.get('ten_thiet_bi', ''), cell_style),
-            Paragraph(r.get('tinh_trang_may', ''), cell_style),
-            Paragraph(r.get('nguoi_giao_ten', ''), cell_style),
-            Paragraph(r.get('nguoi_nhan_ten', ''), cell_style),
-            Paragraph(r.get('ngay_ban_giao', ''), cell_style),
-            Paragraph(str(r.get('tan_suat', 0)), cell_style),
-            Paragraph(r.get('ghi_chu', '') or '', cell_style),
+            Paragraph(r.get('ten_thiet_bi') or '', cell_style),
+            Paragraph(r.get('tinh_trang_may') or '', cell_style),
+            Paragraph(r.get('nguoi_giao_ten') or '', cell_style),
+            Paragraph(r.get('nguoi_nhan_ten') or '', cell_style),
+            Paragraph(r.get('ngay_ban_giao') or '', cell_style),
+            Paragraph(str(r.get('tan_suat') or 0), cell_style),
+            Paragraph(r.get('ghi_chu') or '', cell_style),
         ])
 
     col_widths = [25, 130, 90, 90, 90, 65, 45, 200]

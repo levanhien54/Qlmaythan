@@ -155,6 +155,15 @@ def count() -> int:
     return row["total"] if row else 0
 
 
+def count_unmatched() -> int:
+    """Đếm phiên CHƯA gán được máy (thiet_bi_id NULL) — dữ liệu import không
+    khớp tên thiết bị; các phiên này bị bỏ khỏi thống kê theo máy."""
+    row = db.fetch_one(
+        "SELECT COUNT(*) AS total FROM phien_dieu_tri WHERE thiet_bi_id IS NULL"
+    )
+    return row["total"] if row else 0
+
+
 def count_today() -> int:
     """Đếm số phiên hôm nay (theo giờ ĐỊA PHƯƠNG, không phải UTC).
     date('now') của SQLite trả ngày UTC → lệch tới 7h ở VN (UTC+7); dùng

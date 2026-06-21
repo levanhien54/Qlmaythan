@@ -111,5 +111,9 @@ class StaffPage(QWidget):
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         if reply == QMessageBox.StandardButton.Yes:
-            nhan_vien.delete(nv_id)
+            try:
+                nhan_vien.delete(nv_id)
+            except nhan_vien.StaffReferencedError as e:
+                QMessageBox.warning(self, "Không thể xóa", str(e))
+                return
             self.refresh_data()

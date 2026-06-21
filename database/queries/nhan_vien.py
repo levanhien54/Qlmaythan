@@ -57,8 +57,40 @@ def update(nv_id: int, **kwargs):
     )
 
 
+class StaffReferencedError(Exception):
+    """Nhân viên đang được tham chiếu — chặn xóa để giữ truy vết trách nhiệm
+    (FK ON DELETE SET NULL sẽ âm thầm gỡ tên khỏi phiên/bảo dưỡng/bàn giao)."""
+
+
+def count_references(nv_id: int) -> int:
+    """Đếm tổng số bản ghi tham chiếu nhân viên này."""
+    total = 0
+    total += db.fetch_one(
+        "SELECT COUNT(*) AS c FROM phien_dieu_tri WHERE ptv_chinh_id = ? OR phu_1_id = ?",
+        (nv_id, nv_id),
+    )["c"]
+    total += db.fetch_one(
+        "SELECT COUNT(*) AS c FROM bao_duong WHERE nguoi_thuc_hien_id = ?", (nv_id,)
+    )["c"]
+    total += db.fetch_one(
+        "SELECT COUNT(*) AS c FROM ban_giao WHERE nguoi_giao_id = ? OR nguoi_nhan_id = ?",
+        (nv_id, nv_id),
+    )["c"]
+    total += db.fetch_one(
+        "SELECT COUNT(*) AS c FROM thiet_bi WHERE nguoi_quan_ly_id = ?", (nv_id,)
+    )["c"]
+    return total
+
+
 def delete(nv_id: int):
-    """Xóa nhân viên."""
+    """Xóa nhân viên. Raise StaffReferencedError nếu còn được tham chiếu."""
+    refs = count_references(nv_id)
+    if refs:
+        raise StaffReferencedError(
+            f"Nhân viên đang được tham chiếu ở {refs} bản ghi "
+            f"(phiên điều trị / bảo dưỡng / bàn giao / quản lý thiết bị). "
+            f"Không thể xóa để giữ truy vết — hãy chuyển công việc trước."
+        )
     db.execute("DELETE FROM nhan_vien WHERE id = ?", (nv_id,))
 
 
