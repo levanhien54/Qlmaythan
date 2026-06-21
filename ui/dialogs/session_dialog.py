@@ -5,7 +5,7 @@ Dialog thêm/sửa phiên điều trị.
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLineEdit, QComboBox, QSpinBox, QDateTimeEdit,
-    QTextEdit, QPushButton, QLabel
+    QTextEdit, QPushButton, QLabel, QMessageBox
 )
 from PyQt6.QtCore import Qt, QDateTime
 from PyQt6.QtGui import QFont
@@ -132,12 +132,15 @@ class SessionDialog(QDialog):
 
     def _save(self):
         if not self.txt_ho_ten.text().strip():
+            QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập họ tên bệnh nhân.")
             self.txt_ho_ten.setFocus()
             return
         # Validate ngày: kết thúc phải sau bắt đầu (khớp ràng buộc của web API).
         bd = self.dt_bat_dau.dateTime()
         kt = self.dt_ket_thuc.dateTime()
         if kt <= bd:
+            QMessageBox.warning(self, "Ngày không hợp lệ",
+                                "Ngày kết thúc phải SAU ngày bắt đầu.")
             self.dt_ket_thuc.setFocus()
             return
         tb_id = self.cb_thiet_bi.currentData()

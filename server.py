@@ -41,15 +41,15 @@ def api_dashboard():
     error_list = [r for r in thiet_bi.get_all() if 'lỗi' in (r.get('tinh_trang','').lower())]
     alerts = []
     if broken:
-        alerts.append({'type':'error','msg':f"{len(broken)} thiet bi da hong: " + ", ".join(r['ten_thiet_bi'] for r in broken[:5])})
+        alerts.append({'type':'error','msg':f"{len(broken)} thiết bị đã hỏng: " + ", ".join(r['ten_thiet_bi'] for r in broken[:5])})
     if error_list:
-        alerts.append({'type':'warning','msg':f"{len(error_list)} thiet bi bao loi: " + ", ".join(r['ten_thiet_bi'] for r in error_list[:5])})
+        alerts.append({'type':'warning','msg':f"{len(error_list)} thiết bị báo lỗi: " + ", ".join(r['ten_thiet_bi'] for r in error_list[:5])})
     if upcoming:
-        alerts.append({'type':'info','msg':f"{len(upcoming)} phieu bao duong sap den han (7 ngay)"})
+        alerts.append({'type':'info','msg':f"{len(upcoming)} phiếu bảo dưỡng sắp đến hạn (7 ngày)"})
     unmatched = phien_dieu_tri.count_unmatched()
     if unmatched:
         alerts.append({'type':'warning',
-                       'msg':f"{unmatched} phien chua gan may (ten thiet bi khong khop khi import) — khong vao thong ke theo may"})
+                       'msg':f"{unmatched} phiên chưa gán máy (tên thiết bị không khớp khi import) — không vào thống kê theo máy"})
     return jsonify({
         'total': total, 'active': active, 'error': error,
         'sessions_today': sessions_today,

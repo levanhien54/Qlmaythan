@@ -4,7 +4,7 @@ Dialog thêm/sửa phiếu bàn giao.
 """
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
-    QComboBox, QDateEdit, QTextEdit, QPushButton, QLabel
+    QComboBox, QDateEdit, QTextEdit, QPushButton, QLabel, QMessageBox
 )
 from PyQt6.QtCore import Qt, QDate
 from PyQt6.QtGui import QFont
@@ -99,10 +99,12 @@ class HandoverDialog(QDialog):
             self.cb_nguoi_nhan.setCurrentIndex(idx)
         if data.get("ngay_ban_giao"):
             self.date_bg.setDate(QDate.fromString(data["ngay_ban_giao"], "yyyy-MM-dd"))
-        self.txt_ghi_chu.setText(data.get("ghi_chu", ""))
+        self.txt_ghi_chu.setText(data.get("ghi_chu") or "")
 
     def _save(self):
         if not self.cb_thiet_bi.currentData():
+            QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng chọn thiết bị bàn giao.")
+            self.cb_thiet_bi.setFocus()
             return
         self.result_data = {
             "thiet_bi_id": self.cb_thiet_bi.currentData(),

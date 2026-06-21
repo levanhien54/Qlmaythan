@@ -4,7 +4,7 @@ Dialog thêm/sửa thiết bị.
 """
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
-    QLineEdit, QComboBox, QSpinBox, QPushButton, QLabel
+    QLineEdit, QComboBox, QSpinBox, QPushButton, QLabel, QMessageBox
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
@@ -111,10 +111,11 @@ class DeviceDialog(QDialog):
 
     def _populate(self, data: dict):
         """Điền dữ liệu khi sửa."""
-        self.txt_ten.setText(data.get("ten_thiet_bi", ""))
-        self.txt_model.setText(data.get("model", ""))
-        self.txt_hang.setText(data.get("hang_san_xuat", ""))
-        self.txt_so_may.setText(data.get("so_may", ""))
+        # `or ""`: cột NULL trả None → setText(None) crash.
+        self.txt_ten.setText(data.get("ten_thiet_bi") or "")
+        self.txt_model.setText(data.get("model") or "")
+        self.txt_hang.setText(data.get("hang_san_xuat") or "")
+        self.txt_so_may.setText(data.get("so_may") or "")
         # 0 → "(chưa rõ)" nhờ specialValueText; không còn bị kẹp lên 2000.
         self.spin_nam.setValue(data.get("nam_su_dung") or 0)
 
@@ -136,6 +137,7 @@ class DeviceDialog(QDialog):
 
     def _save(self):
         if not self.txt_ten.text().strip():
+            QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập tên thiết bị.")
             self.txt_ten.setFocus()
             return
 

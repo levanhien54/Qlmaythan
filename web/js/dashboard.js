@@ -40,7 +40,7 @@ async function renderDashboard(el) {
             <div class="stat-card blue clickable" onclick="goToDevices('','status')"><span class="stat-icon">🖥️</span><div class="stat-info"><div class="stat-value">${d.total}</div><div class="stat-label">Tổng thiết bị</div></div></div>
             <div class="stat-card green clickable" onclick="goToDevices('Hoạt động bình thường','status')"><span class="stat-icon">✅</span><div class="stat-info"><div class="stat-value">${d.active}</div><div class="stat-label">Hoạt động</div></div></div>
             <div class="stat-card red clickable" onclick="goToDevices('Báo lỗi','status')"><span class="stat-icon">⚠️</span><div class="stat-info"><div class="stat-value">${d.error}</div><div class="stat-label">Báo lỗi / Hỏng</div></div></div>
-            <div class="stat-card yellow clickable" onclick="navigate('sessions')"><span class="stat-icon">📋</span><div class="stat-info"><div class="stat-value">${d.sessions_today}</div><div class="stat-label">Tần xuất HĐ hôm nay</div></div></div>
+            <div class="stat-card yellow clickable" onclick="navigate('sessions')"><span class="stat-icon">📋</span><div class="stat-info"><div class="stat-value">${d.sessions_today}</div><div class="stat-label">Số phiên hôm nay</div></div></div>
         </div>
         <div class="charts-grid">
             <div class="chart-card">

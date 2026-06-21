@@ -5,7 +5,7 @@ Dialog thêm/sửa phiếu bảo dưỡng.
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
     QLineEdit, QComboBox, QDateEdit, QDoubleSpinBox,
-    QTextEdit, QPushButton, QLabel
+    QTextEdit, QPushButton, QLabel, QMessageBox
 )
 from PyQt6.QtCore import Qt, QDate
 from PyQt6.QtGui import QFont
@@ -130,6 +130,8 @@ class MaintenanceDialog(QDialog):
 
     def _save(self):
         if not self.cb_thiet_bi.currentData():
+            QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng chọn thiết bị.")
+            self.cb_thiet_bi.setFocus()
             return
         self.result_data = {
             "thiet_bi_id": self.cb_thiet_bi.currentData(),

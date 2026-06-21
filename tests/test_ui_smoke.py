@@ -24,6 +24,17 @@ def qapp():
     yield app
 
 
+@pytest.fixture(autouse=True)
+def _silence_msgbox(monkeypatch):
+    """QMessageBox modal sẽ TREO test headless — thay bằng no-op.
+    Patch trên class nên áp dụng cho mọi module đã `import QMessageBox`."""
+    from PyQt6.QtWidgets import QMessageBox
+    monkeypatch.setattr(QMessageBox, "warning", staticmethod(lambda *a, **k: None))
+    monkeypatch.setattr(QMessageBox, "information", staticmethod(lambda *a, **k: None))
+    monkeypatch.setattr(QMessageBox, "question",
+                        staticmethod(lambda *a, **k: QMessageBox.StandardButton.Yes))
+
+
 # ---------- import-check mọi module ui/ (bắt lỗi cú pháp/khởi tạo) ----------
 
 @pytest.mark.parametrize("mod", [

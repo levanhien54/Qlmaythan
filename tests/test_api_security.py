@@ -117,4 +117,4 @@ def test_unmatched_sessions_counted_and_alerted(client):
                           may_thuc_hien="Máy X", ngay_bat_dau="2026-04-02 08:00:00")
     assert phien_dieu_tri.count_unmatched() == 1
     d = client.get('/api/dashboard').get_json()
-    assert any('chua gan may' in a['msg'] for a in d['alerts'])
+    assert any('chưa gán máy' in a['msg'] for a in d['alerts'])

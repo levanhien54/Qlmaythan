@@ -4,7 +4,7 @@ Dialog thêm/sửa nhân viên.
 """
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QFormLayout,
-    QLineEdit, QComboBox, QPushButton, QLabel
+    QLineEdit, QComboBox, QPushButton, QLabel, QMessageBox
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
@@ -67,14 +67,15 @@ class StaffDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def _populate(self, data: dict):
-        self.txt_ten.setText(data.get("ho_ten", ""))
-        cv = data.get("chuc_vu_trinh_do", "")
+        self.txt_ten.setText(data.get("ho_ten") or "")
+        cv = data.get("chuc_vu_trinh_do") or ""
         idx = self.cb_chuc_vu.findText(cv)
         if idx >= 0:
             self.cb_chuc_vu.setCurrentIndex(idx)
 
     def _save(self):
         if not self.txt_ten.text().strip():
+            QMessageBox.warning(self, "Thiếu thông tin", "Vui lòng nhập họ tên nhân viên.")
             self.txt_ten.setFocus()
             return
         self.result_data = {
