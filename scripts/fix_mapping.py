@@ -1,6 +1,7 @@
 """Migration: map may_thuc_hien text to thiet_bi_id for orphaned phien_dieu_tri records."""
-import sys, re
+import sys, os, re
 sys.stdout.reconfigure(encoding='utf-8')
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.connection import db
 
 
