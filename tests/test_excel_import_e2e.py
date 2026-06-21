@@ -140,6 +140,25 @@ def test_preview_flags_errors_no_write(client, seeded):
     assert any('Thiếu ngày bắt đầu' in e for e in err['errors'])
 
 
+def test_live_overlap_guard_independent_of_snapshot(client, seeded, monkeypatch):
+    """Chốt chặn overlap LIVE: kể cả khi check snapshot in-memory bị vô hiệu
+    (giả lập snapshot cũ do import đồng thời), live check_time_overlap vẫn bắt
+    được phiên trùng giờ đã có trong DB → không double-book."""
+    import excel_import
+    # Phiên đã có trong DB (08:00–12:00) trên máy HDF số 1
+    phien_dieu_tri.create(ho_ten='BN cũ', thiet_bi_id=seeded['ok'],
+                          ngay_bat_dau='2026-04-01 08:00:00',
+                          ngay_ket_thuc='2026-04-01 12:00:00')
+    # Vô hiệu hóa check in-memory → chỉ còn lưới an toàn LIVE
+    monkeypatch.setattr(excel_import, 'check_session_overlap', lambda *a, **k: None)
+    buf = build_xlsx([make_row(
+        ho_ten='BN mới', ngay_bd='2026-04-01 10:00:00', ngay_kt='2026-04-01 14:00:00',
+        may='Máy thận HDF số 1')])
+    d = post_excel(client, buf).get_json()
+    assert d['success'] == 0 and d['skipped'] == 1
+    assert any('Trùng thời gian (DB)' in e for e in d['errors'][0]['errors'])
+
+
 def test_preview_then_import_consistent(client, seeded):
     """Preview báo N hợp lệ → import thật phải success đúng N."""
     rows = [

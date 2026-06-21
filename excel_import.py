@@ -244,6 +244,21 @@ def import_sessions(rows_data, datemode: int = 0) -> dict:
                 results['errors'].append({'row': row_num, 'name': ho_ten, 'errors': rec['errors']})
                 results['skipped'] += 1
                 continue
+            # Lưới an toàn cuối: kiểm tra trùng giờ với DB LIVE ngay trước khi ghi.
+            # check_session_overlap (trong _evaluate_row) chỉ soi snapshot nạp 1 lần
+            # lúc bắt đầu → bỏ sót phiên do tiến trình khác commit sau đó (import
+            # đồng thời) gây double-book. SQLite không có ràng buộc overlap nên đây
+            # là chốt chặn ở tầng app, dùng CHUNG check_time_overlap như API.
+            if rec['thiet_bi_id'] and rec['ngay_bat_dau']:
+                live = phien_dieu_tri.check_time_overlap(
+                    rec['thiet_bi_id'], rec['ngay_bat_dau'], rec['ngay_ket_thuc'])
+                if live:
+                    results['errors'].append({'row': row_num, 'name': ho_ten, 'errors': [
+                        f"Trùng thời gian (DB): máy đang có phiên của \"{live['ho_ten']}\" "
+                        f"từ {live['ngay_bat_dau']} đến {live['ngay_ket_thuc'] or '(chưa kết thúc)'}"
+                    ]})
+                    results['skipped'] += 1
+                    continue
             try:
                 phien_dieu_tri.create(
                     ho_ten=rec['ho_ten'], tuoi=rec['tuoi'], dia_chi=rec['dia_chi'],
