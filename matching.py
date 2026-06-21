@@ -39,6 +39,12 @@ DATE_FORMATS = [
 # Trạng thái máy không cho phép nhập phiên — substring match (lowercase).
 BLOCKED_DEVICE_STATES = ('hỏng', 'thanh lý', 'báo lỗi')
 
+# Ngưỡng tối thiểu để coi một SỐ Excel là serial NGÀY. parse_excel_datetime chỉ
+# chạy trên cột ngày (BĐ/KT) nên số trong cột này nên là serial. ~1990-01-01
+# (serial 32874) đủ bao mọi hồ sơ điều trị thực tế mà vẫn loại số nhỏ vô nghĩa.
+# Trước đây ngưỡng 40000 (~2009) làm RỚT âm thầm mọi ngày trước 2009.
+_MIN_EXCEL_DATE_SERIAL = 32874
+
 
 # Layout mặc định file 011.3.xls (BV BN Số 2).
 DEFAULT_COLUMN_LAYOUT = {
@@ -162,9 +168,10 @@ def parse_excel_datetime(v, xls_datemode: int = 0):
     if isinstance(v, _datetime.date):
         return v.strftime('%Y-%m-%d') + ' 00:00:00'
 
-    # Excel serial number trước khi fall-through sang chuỗi — ưu tiên vì
-    # isinstance(True, int) == True gây ambiguity, nên check > 40000 (>1 Jan 2009).
-    if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 40000:
+    # Excel serial number trước khi fall-through sang chuỗi. Loại bool (vì
+    # isinstance(True, int) == True) và số quá nhỏ; xldate_as_tuple sẽ tự loại
+    # serial ngoài phạm vi hợp lệ.
+    if isinstance(v, (int, float)) and not isinstance(v, bool) and v >= _MIN_EXCEL_DATE_SERIAL:
         try:
             import xlrd
             t = xlrd.xldate_as_tuple(v, xls_datemode)

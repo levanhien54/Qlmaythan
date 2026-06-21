@@ -31,13 +31,19 @@ print(f"[5] bao_duong with INVALID thiet_bi_id: {r3['c']}")
 r4 = db.fetch_one('SELECT COUNT(*) as c FROM thiet_bi WHERE nguoi_quan_ly_id IS NOT NULL AND nguoi_quan_ly_id NOT IN (SELECT id FROM nhan_vien)')
 print(f"[6] thiet_bi with INVALID nguoi_quan_ly_id: {r4['c']}")
 
-# Unmapped may_thuc_hien
-print("\n=== UNMAPPED may_thuc_hien ===")
+# Unmapped may_thuc_hien — dùng ĐÚNG logic find_device của bộ import (không
+# phải LIKE '%...%' ngây thơ, vốn cho dương tính giả / verdict sai lệch).
+print("\n=== UNMAPPED may_thuc_hien (theo logic find_device thật) ===")
+from matching import find_device
+_devs = db.fetch_all("SELECT id, ten_thiet_bi, tinh_trang FROM thiet_bi")
+device_list = [(d['id'], d['ten_thiet_bi'],
+                d['ten_thiet_bi'].lower().replace(' ', ''),
+                d.get('tinh_trang', '')) for d in _devs]
 unmapped = db.fetch_all("SELECT DISTINCT p.may_thuc_hien FROM phien_dieu_tri p WHERE p.thiet_bi_id IS NULL AND p.may_thuc_hien IS NOT NULL AND p.may_thuc_hien != ''")
 for u in unmapped:
     name = u['may_thuc_hien']
-    match = db.fetch_one("SELECT id, ten_thiet_bi FROM thiet_bi WHERE ten_thiet_bi LIKE ?", (f'%{name}%',))
-    status = f"MATCH id={match['id']}" if match else "NO MATCH"
+    did, ten, _tt = find_device(name, device_list)
+    status = f"MAP -> id={did} ({ten})" if did else "KHONG khop / mo ho (can ghi ro hang+so)"
     print(f"  '{name}' -> {status}")
 
 # Date formats

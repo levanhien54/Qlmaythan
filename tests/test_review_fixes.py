@@ -8,7 +8,7 @@ Khoá hành vi đúng cho các fix nghiêm trọng nhất:
 """
 import pytest
 
-from matching import find_device
+from matching import find_device, parse_excel_datetime
 from database.queries import thiet_bi, bao_duong, phien_dieu_tri, ban_giao
 
 
@@ -134,3 +134,17 @@ def test_validate_payload_string_age_no_crash():
     # chuỗi không phải số → lỗi 400
     err = _validate_session_payload({**base, "tuoi": "abc"})
     assert err and err[1] == 400
+
+
+# ---------- D5 parse_excel_datetime: nhận ngày trước 2009, loại số nhỏ ----------
+
+def test_parse_excel_serial_accepts_pre_2009_date():
+    """Serial 38353 = 2005-01-01: trước đây ngưỡng >40000 làm rớt thành None."""
+    r = parse_excel_datetime(38353, xls_datemode=0)
+    assert r is not None and r.startswith("2005-01-01")
+
+
+def test_parse_excel_serial_rejects_small_numbers():
+    """Số nhỏ (vd tuổi 65) trong cột ngày KHÔNG bị hiểu nhầm thành ngày 1900."""
+    assert parse_excel_datetime(65, xls_datemode=0) is None
+    assert parse_excel_datetime(0, xls_datemode=0) is None
