@@ -10,7 +10,7 @@ async function renderHandover(el) {
         <div class="toolbar">
             <select id="hoDev" onchange="filterHandover()"><option value="">Tất cả TB</option>${devOpts}</select>
             <select id="hoStaff" onchange="filterHandover()"><option value="">Tất cả NV</option>${staffFilter}</select>
-            <input type="date" id="hoDateFrom" value="${today}" onchange="filterHandover()" oninput="filterHandover()" title="Từ ngày">
+            <input type="date" id="hoDateFrom" value="" onchange="filterHandover()" oninput="filterHandover()" title="Từ ngày">
             <input type="date" id="hoDateTo" value="${today}" onchange="filterHandover()" oninput="filterHandover()" title="Đến ngày">
             <div class="spacer"></div>
             <button class="btn" style="background:var(--accent-orange);color:#fff" onclick="exportHandoverPDF()">📄 Xuất PDF</button>

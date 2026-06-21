@@ -2,7 +2,6 @@
 
 async function renderDevices(el) {
     el.style.cssText = '';
-    const today = todayLocal();
     el.innerHTML = `
         <h1 class="page-title">🖥️ Quản lý Thiết bị</h1>
         <div class="toolbar">
@@ -11,8 +10,6 @@ async function renderDevices(el) {
                 <option value="">Tất cả tình trạng</option>
                 <option>Hoạt động bình thường</option><option>Báo lỗi</option><option>Hỏng</option><option>Đã thanh lý</option>
             </select>
-            <input type="date" id="devDateFrom" value="${today}" onchange="filterDevices()" oninput="filterDevices()" title="Từ ngày">
-            <input type="date" id="devDateTo" value="${today}" onchange="filterDevices()" oninput="filterDevices()" title="Đến ngày">
             <div class="spacer"></div>
             <button class="btn btn-primary" onclick="addDevice()">➕ Thêm thiết bị</button>
         </div>
@@ -35,11 +32,7 @@ async function filterDevices() {
     _devStats = { total: 0, active: 0, totalSessions: 0 };
     const search = $('#devSearch')?.value || '';
     const tinh_trang = $('#devStatus')?.value || '';
-    const dateFrom = $('#devDateFrom')?.value || '';
-    const dateTo = $('#devDateTo')?.value || '';
     let base = `/api/thiet-bi?search=${encodeURIComponent(search)}&tinh_trang=${encodeURIComponent(tinh_trang)}`;
-    if (dateFrom) base += `&from_date=${dateFrom}`;
-    if (dateTo) base += `&to_date=${dateTo}`;
     const scr = new InfiniteScroll('#devTableWrap', '#devBody', '#devCount',
         (offset, limit) => api(`${base}&limit=${limit}&offset=${offset}`),
         (r, i) => {

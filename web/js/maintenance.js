@@ -11,7 +11,7 @@ async function renderMaintenance(el) {
             <select id="maintDev" onchange="filterMaint()"><option value="">Tất cả thiết bị</option>${devOpts}</select>
             <select id="maintType" onchange="filterMaint()"><option value="">Tất cả loại</option>${cfg.loai_bao_duong.map(l=>`<option>${l}</option>`).join('')}</select>
             <select id="maintStatus" onchange="filterMaint()"><option value="">Tất cả trạng thái</option>${cfg.trang_thai_bao_duong.map(t=>`<option>${t}</option>`).join('')}</select>
-            <input type="date" id="maintDateFrom" value="${today}" onchange="filterMaint()" oninput="filterMaint()" title="Từ ngày">
+            <input type="date" id="maintDateFrom" value="" onchange="filterMaint()" oninput="filterMaint()" title="Từ ngày">
             <input type="date" id="maintDateTo" value="${today}" onchange="filterMaint()" oninput="filterMaint()" title="Đến ngày">
             <div class="spacer"></div>
             <button class="btn btn-primary" onclick="addMaint()">➕ Thêm phiếu</button>

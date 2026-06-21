@@ -11,7 +11,7 @@ async function renderSessions(el) {
             <input type="search" id="sesSearch" placeholder="🔍 Tìm tên BN, SHS..." oninput="filterSessions()">
             <select id="sesDev" onchange="filterSessions()"><option value="">Tất cả máy</option>${devOpts}</select>
             <select id="sesPtv" onchange="filterSessions()"><option value="">Tất cả PTV</option>${ptvOpts}</select>
-            <input type="date" id="sesDateFrom" value="${today}" onchange="filterSessions()" oninput="filterSessions()" title="Từ ngày">
+            <input type="date" id="sesDateFrom" value="" onchange="filterSessions()" oninput="filterSessions()" title="Từ ngày">
             <input type="date" id="sesDateTo" value="${today}" onchange="filterSessions()" oninput="filterSessions()" title="Đến ngày">
             <div class="spacer"></div>
             <button class="btn btn-success" onclick="$('#excelFileInput').click()">📥 Nhập Excel</button>
