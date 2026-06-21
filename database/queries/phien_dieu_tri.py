@@ -3,6 +3,7 @@
 CRUD queries cho bảng phien_dieu_tri.
 """
 from database.connection import db
+from database import audit
 
 
 def get_all(from_date: str = "", to_date: str = "",
@@ -115,6 +116,9 @@ def create(ho_ten: str, may_thuc_hien: str = "",
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (thiet_bi_id, may_thuc_hien, ho_ten, tuoi, dia_chi, so_ho_so,
               ngay_bat_dau, ngay_ket_thuc, ptv_chinh_id, phu_1_id, ghi_chu))
+        audit.record('create', 'phien_dieu_tri', cursor.lastrowid, {
+            'ho_ten': ho_ten, 'thiet_bi_id': thiet_bi_id, 'ngay_bat_dau': ngay_bat_dau,
+        })
         return cursor.lastrowid
     except sqlite3.IntegrityError as e:
         if 'UNIQUE' in str(e) or 'ux_phien_tb_bd' in str(e):
@@ -142,10 +146,14 @@ def update(pdt_id: int, **kwargs):
         f"UPDATE phien_dieu_tri SET {set_clause} WHERE id = ?",
         tuple(values),
     )
+    audit.record('update', 'phien_dieu_tri', pdt_id, kwargs)
 
 
 def delete(pdt_id: int):
-    """Xóa phiên điều trị."""
+    """Xóa phiên điều trị (lưu snapshot để khôi phục)."""
+    snap = db.fetch_one("SELECT * FROM phien_dieu_tri WHERE id = ?", (pdt_id,))
+    if snap:
+        audit.record('delete', 'phien_dieu_tri', pdt_id, snap)
     db.execute("DELETE FROM phien_dieu_tri WHERE id = ?", (pdt_id,))
 
 

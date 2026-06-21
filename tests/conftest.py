@@ -22,13 +22,14 @@ def temp_db(monkeypatch):
     # Patch singleton dùng ở mọi nơi
     import database.connection as conn_mod
     import database.models as models_mod
+    import database.audit as audit_mod
     import database.queries.thiet_bi as tb_mod
     import database.queries.nhan_vien as nv_mod
     import database.queries.phien_dieu_tri as pdt_mod
     import database.queries.bao_duong as bd_mod
     import database.queries.ban_giao as bg_mod
 
-    for m in (conn_mod, models_mod, tb_mod, nv_mod, pdt_mod, bd_mod, bg_mod):
+    for m in (conn_mod, models_mod, audit_mod, tb_mod, nv_mod, pdt_mod, bd_mod, bg_mod):
         monkeypatch.setattr(m, "db", test_db, raising=False)
 
     from database.models import create_all_tables

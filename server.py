@@ -18,6 +18,7 @@ from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from database.models import create_all_tables
 from database.queries import thiet_bi, nhan_vien, bao_duong, phien_dieu_tri, ban_giao
+from database import audit
 from config import TAN_SUAT, LOAI_BAO_DUONG, TRANG_THAI_BAO_DUONG, CHUC_VU, LOG_PATH, DATA_DIR
 from excel_import import parse_workbook, import_sessions, preview_sessions, ExcelParseError
 
@@ -594,6 +595,25 @@ def api_import_excel():
     except Exception as e:
         log.exception('Import Excel lỗi')   # traceback vào log, KHÔNG trả về client
         return jsonify({'ok': False, 'error': f'Lỗi hệ thống: {str(e)}'}), 500
+
+
+# ---------- API: Audit / Nhật ký & Khôi phục ----------
+@app.route('/api/audit')
+def api_audit_list():
+    entity = request.args.get('entity', '')
+    action = request.args.get('action', '')
+    limit = request.args.get('limit', 200, type=int)
+    return jsonify(audit.recent(limit=limit, entity=entity, action=action))
+
+
+@app.route('/api/audit/<int:id>/restore', methods=['POST'])
+def api_audit_restore(id):
+    """Khôi phục bản ghi đã xóa từ một mục nhật ký."""
+    try:
+        rec_id = audit.restore(id)
+    except audit.RestoreError as e:
+        return jsonify({'error': str(e)}), 409
+    return jsonify({'ok': True, 'id': rec_id})
 
 
 @app.route('/api/phien-dieu-tri/preview-excel', methods=['POST'])

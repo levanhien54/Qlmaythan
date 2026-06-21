@@ -103,6 +103,19 @@ def create_all_tables():
         )
     """)
 
+    # 6. Bảng Nhật ký thao tác (audit) — ghi mọi create/update/delete.
+    #    delete lưu SNAPSHOT cả dòng (cột data) để KHÔI PHỤC được.
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            action TEXT NOT NULL,
+            entity TEXT NOT NULL,
+            entity_id INTEGER,
+            data TEXT
+        )
+    """)
+
     # Migration: add trang_thai if missing
     try:
         db.execute("ALTER TABLE ban_giao ADD COLUMN trang_thai TEXT DEFAULT 'Đã bàn giao'")

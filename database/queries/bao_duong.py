@@ -3,6 +3,7 @@
 CRUD queries cho bảng bao_duong.
 """
 from database.connection import db
+from database import audit
 
 
 def get_all(thiet_bi_id: int = None, loai: str = "",
@@ -70,6 +71,8 @@ def create(thiet_bi_id: int, loai: str, ngay_thuc_hien: str,
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (thiet_bi_id, nguoi_thuc_hien_id, loai, ngay_thuc_hien,
           ngay_du_kien_tiep_theo, mo_ta, chi_phi, trang_thai))
+    audit.record('create', 'bao_duong', cursor.lastrowid,
+                 {'thiet_bi_id': thiet_bi_id, 'loai': loai, 'ngay_thuc_hien': ngay_thuc_hien})
     return cursor.lastrowid
 
 
@@ -91,10 +94,14 @@ def update(bd_id: int, **kwargs):
         f"UPDATE bao_duong SET {set_clause} WHERE id = ?",
         tuple(values),
     )
+    audit.record('update', 'bao_duong', bd_id, kwargs)
 
 
 def delete(bd_id: int):
-    """Xóa phiếu bảo dưỡng."""
+    """Xóa phiếu bảo dưỡng (lưu snapshot để khôi phục)."""
+    snap = db.fetch_one("SELECT * FROM bao_duong WHERE id = ?", (bd_id,))
+    if snap:
+        audit.record('delete', 'bao_duong', bd_id, snap)
     db.execute("DELETE FROM bao_duong WHERE id = ?", (bd_id,))
 
 

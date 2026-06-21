@@ -3,6 +3,7 @@
 CRUD queries cho bảng thiet_bi.
 """
 from database.connection import db
+from database import audit
 
 
 def get_all(search: str = "", tinh_trang: str = "",
@@ -76,6 +77,9 @@ def create(ten_thiet_bi: str, model: str = "", hang_san_xuat: str = "",
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (ten_thiet_bi, model, hang_san_xuat, nuoc_san_xuat, so_may,
           nam_su_dung, tinh_trang, tan_suat_su_dung, nguoi_quan_ly_id))
+    audit.record('create', 'thiet_bi', cursor.lastrowid, {
+        'ten_thiet_bi': ten_thiet_bi, 'model': model, 'tinh_trang': tinh_trang,
+    })
     return cursor.lastrowid
 
 
@@ -100,6 +104,7 @@ def update(tb_id: int, **kwargs):
         f"UPDATE thiet_bi SET {set_clause} WHERE id = ?",
         tuple(values),
     )
+    audit.record('update', 'thiet_bi', tb_id, kwargs)
 
 
 class DeviceHasHistoryError(Exception):
@@ -121,6 +126,9 @@ def delete(tb_id: int):
             f"Thiết bị còn {bd} phiếu bảo dưỡng và {bg} phiếu bàn giao. "
             f"Xóa sẽ mất toàn bộ lịch sử này — hãy xử lý các bản ghi đó trước."
         )
+    snap = db.fetch_one("SELECT * FROM thiet_bi WHERE id = ?", (tb_id,))
+    if snap:
+        audit.record('delete', 'thiet_bi', tb_id, snap)  # snapshot để khôi phục
     db.execute("DELETE FROM thiet_bi WHERE id = ?", (tb_id,))
 
 

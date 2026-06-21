@@ -26,6 +26,7 @@ async function renderPage(page) {
             case 'sessions': await renderSessions(main); break;
             case 'staff': await renderStaff(main); break;
             case 'statistics': await renderStatistics(main); break;
+            case 'audit': await renderAudit(main); break;
         }
     } catch (e) {
         main.innerHTML = `<div style="color:var(--status-error);padding:40px;">Lỗi: ${e.message}</div>`;

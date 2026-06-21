@@ -3,6 +3,7 @@
 CRUD queries cho bảng nhan_vien.
 """
 from database.connection import db
+from database import audit
 
 
 def get_all(search: str = "", chuc_vu: str = "",
@@ -37,6 +38,8 @@ def create(ho_ten: str, chuc_vu_trinh_do: str) -> int:
         "INSERT INTO nhan_vien (ho_ten, chuc_vu_trinh_do) VALUES (?, ?)",
         (ho_ten, chuc_vu_trinh_do),
     )
+    audit.record('create', 'nhan_vien', cursor.lastrowid,
+                 {'ho_ten': ho_ten, 'chuc_vu_trinh_do': chuc_vu_trinh_do})
     return cursor.lastrowid
 
 
@@ -55,6 +58,7 @@ def update(nv_id: int, **kwargs):
         f"UPDATE nhan_vien SET {set_clause} WHERE id = ?",
         tuple(values),
     )
+    audit.record('update', 'nhan_vien', nv_id, kwargs)
 
 
 class StaffReferencedError(Exception):
@@ -91,6 +95,9 @@ def delete(nv_id: int):
             f"(phiên điều trị / bảo dưỡng / bàn giao / quản lý thiết bị). "
             f"Không thể xóa để giữ truy vết — hãy chuyển công việc trước."
         )
+    snap = db.fetch_one("SELECT * FROM nhan_vien WHERE id = ?", (nv_id,))
+    if snap:
+        audit.record('delete', 'nhan_vien', nv_id, snap)
     db.execute("DELETE FROM nhan_vien WHERE id = ?", (nv_id,))
 
 

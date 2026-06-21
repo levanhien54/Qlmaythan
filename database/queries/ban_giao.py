@@ -3,6 +3,7 @@
 CRUD queries cho bảng ban_giao.
 """
 from database.connection import db
+from database import audit
 
 
 def get_all(thiet_bi_id: int = None, nhan_vien_id: int = None,
@@ -90,6 +91,8 @@ def create(thiet_bi_id: int, nguoi_giao_id: int = None,
         (thiet_bi_id, nguoi_giao_id, nguoi_nhan_id, ngay_ban_giao, trang_thai, ghi_chu)
         VALUES (?, ?, ?, ?, ?, ?)
     """, (thiet_bi_id, nguoi_giao_id, nguoi_nhan_id, ngay_ban_giao, trang_thai, ghi_chu))
+    audit.record('create', 'ban_giao', cursor.lastrowid,
+                 {'thiet_bi_id': thiet_bi_id, 'ngay_ban_giao': ngay_ban_giao})
     return cursor.lastrowid
 
 
@@ -120,6 +123,10 @@ def create_batch(device_ids: list, nguoi_giao_id: int = None,
                 VALUES (?, ?, ?, ?, ?, ?)
             """, (tb_id, nguoi_giao_id, nguoi_nhan_id, ngay_ban_giao, trang_thai, ghi_chu))
             ids.append(cur.lastrowid)
+    # Ghi audit SAU transaction (record dùng commit riêng — không phá tính nguyên tử)
+    for tb_id, nid in zip(device_ids, ids):
+        audit.record('create', 'ban_giao', nid,
+                     {'thiet_bi_id': tb_id, 'ngay_ban_giao': ngay_ban_giao})
     return ids
 
 
@@ -134,10 +141,14 @@ def update(bg_id: int, **kwargs):
         f"UPDATE ban_giao SET {set_clause} WHERE id = ?",
         tuple(values),
     )
+    audit.record('update', 'ban_giao', bg_id, kwargs)
 
 
 def delete(bg_id: int):
-    """Xóa phiếu bàn giao."""
+    """Xóa phiếu bàn giao (lưu snapshot để khôi phục)."""
+    snap = db.fetch_one("SELECT * FROM ban_giao WHERE id = ?", (bg_id,))
+    if snap:
+        audit.record('delete', 'ban_giao', bg_id, snap)
     db.execute("DELETE FROM ban_giao WHERE id = ?", (bg_id,))
 
 
