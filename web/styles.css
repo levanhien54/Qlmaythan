@@ -623,6 +623,8 @@ table:has(td.actions) thead th:last-child {
     box-shadow: var(--shadow);
     animation: slideIn 0.3s ease;
     border-left: 4px solid var(--accent-green);
+    max-width: min(360px, calc(100vw - 40px));  /* không kéo dài quá rộng (msg lỗi dài) / tràn lề màn hình hẹp */
+    word-break: break-word;
 }
 
 .toast.error { border-left-color: var(--status-error); }
@@ -630,7 +632,7 @@ table:has(td.actions) thead th:last-child {
 /* ========== ANIMATIONS ========== */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-@keyframes slideIn { from { transform: translateX(80px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
 
 
