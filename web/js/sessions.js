@@ -140,7 +140,7 @@ async function deleteSession(id) {
     } catch (e) { toast(e.message, true); }
 }
 
-// ========== IMPORT EXCEL ==========
+// ========== IMPORT EXCEL (2 pha: xem trước → xác nhận) ==========
 async function importExcelSessions(inputEl) {
     const file = inputEl.files[0];
     if (!file) return;
@@ -151,54 +151,66 @@ async function importExcelSessions(inputEl) {
         return toast('Chỉ chấp nhận file .xls hoặc .xlsx', true);
     }
 
-    toast('⏳ Đang kiểm tra và nhập dữ liệu từ Excel...');
-
+    toast('⏳ Đang phân tích file (chưa ghi dữ liệu)...');
     try {
-        const formData = new FormData();
-        formData.append('file', file);
+        const fd = new FormData(); fd.append('file', file);
+        const res = await fetch('/api/phien-dieu-tri/preview-excel', { method: 'POST', body: fd });
+        const p = await res.json();
+        if (!p.ok) { toast(`❌ ${p.error || 'Không đọc được file'}`, true); return; }
+        showImportPreview(file, p);
+    } catch (e) {
+        toast(`❌ Lỗi kết nối: ${e.message}`, true);
+    }
+}
 
-        const res = await fetch('/api/phien-dieu-tri/import-excel', {
-            method: 'POST',
-            body: formData
-        });
+function showImportPreview(file, p) {
+    const rowsHtml = p.rows.map(r => `<tr>
+        <td style="text-align:center">${r.row}</td>
+        <td style="text-align:center;color:${r.status === 'ok' ? '#00c853' : '#e94560'}">${r.status === 'ok' ? '✓' : '✕'}</td>
+        <td>${esc(r.ho_ten)}</td>
+        <td>${esc(r.may || '')}</td>
+        <td>${esc((r.ngay_bat_dau || '').substring(0, 16))}</td>
+        <td style="color:#e94560">${esc((r.errors || []).join('; '))}</td>
+    </tr>`).join('');
+    const capped = p.total > p.rows.length
+        ? `<div style="color:var(--text-muted);margin-top:6px">Hiển thị ${p.rows.length}/${p.total} dòng.</div>` : '';
+    const body = `
+        <div style="margin-bottom:10px">Tổng <b>${p.total}</b> dòng —
+            <b style="color:#00c853">${p.valid} hợp lệ</b>,
+            <b style="color:#e94560">${p.invalid} lỗi</b></div>
+        <div style="max-height:48vh;overflow:auto;border:1px solid var(--border);border-radius:6px">
+            <table style="width:100%;border-collapse:collapse;font-size:13px">
+                <thead><tr style="position:sticky;top:0;background:var(--bg-card)">
+                    <th style="padding:6px">Dòng</th><th></th><th style="text-align:left;padding:6px">Họ tên</th>
+                    <th style="text-align:left">Máy</th><th style="text-align:left">Ngày BĐ</th><th style="text-align:left">Lỗi</th>
+                </tr></thead>
+                <tbody>${rowsHtml}</tbody>
+            </table>
+        </div>${capped}
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px">
+            <button class="btn btn-outline" onclick="closeModal()">Hủy</button>
+            <button class="btn btn-primary" id="btnConfirmImport" ${p.valid === 0 ? 'disabled' : ''}>
+                ✅ Xác nhận nhập ${p.valid} phiên</button>
+        </div>`;
+    showInfoModal(`📋 Xem trước nhập: ${file.name}`, body);
+    const btn = $('#btnConfirmImport');
+    if (btn && p.valid > 0) btn.onclick = () => confirmImport(file);
+}
+
+async function confirmImport(file) {
+    const btn = $('#btnConfirmImport');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Đang nhập...'; }
+    try {
+        const fd = new FormData(); fd.append('file', file);
+        const res = await fetch('/api/phien-dieu-tri/import-excel', { method: 'POST', body: fd });
         const data = await res.json();
-
-        if (!data.ok && data.error) {
-            toast(`❌ ${data.error}`, true);
-            return;
-        }
-
-        // Hộp thoại kết quả chi tiết (modal trong app, không dùng al() chặn UI)
-        if (data.skipped > 0 || (data.errors && data.errors.length > 0)) {
-            const lines = [];
-            lines.push(`Thành công: ${data.success}/${data.total} phiên`);
-            if (data.skipped > 0) lines.push(`Bị từ chối: ${data.skipped} phiên`);
-            lines.push('');
-            if (data.errors && data.errors.length > 0) {
-                lines.push(`Chi tiết lỗi (${data.errors.length} dòng):`);
-                data.errors.slice(0, 50).forEach(e => {
-                    lines.push(`• Dòng ${e.row} — ${e.name}:`);
-                    (e.errors || [e.error]).forEach(err => lines.push(`    - ${err}`));
-                });
-                if (data.errors.length > 50) {
-                    lines.push(`... và ${data.errors.length - 50} lỗi khác`);
-                }
-            }
-            const body = `<div style="max-height:55vh;overflow:auto;white-space:pre-wrap;`
-                + `font-size:13px;line-height:1.6">${esc(lines.join('\n'))}</div>`
-                + `<div style="text-align:right;margin-top:14px">`
-                + `<button class="btn btn-primary" onclick="closeModal()">Đóng</button></div>`;
-            showInfoModal(`📊 Kết quả nhập: ${file.name}`, body);
-        }
-
-        if (data.success > 0) {
-            toast(`✅ Đã nhập ${data.success}/${data.total} phiên thành công!`);
-        } else if (data.total > 0) {
-            toast(`❌ Không nhập được phiên nào (${data.skipped} lỗi)`, true);
-        }
-
+        closeModal();
+        if (!data.ok && data.error) { toast(`❌ ${data.error}`, true); return; }
+        if (data.success > 0) toast(`✅ Đã nhập ${data.success}/${data.total} phiên!`);
+        else if (data.total > 0) toast(`❌ Không nhập được phiên nào (${data.skipped} lỗi)`, true);
         filterSessions();
     } catch (e) {
         toast(`❌ Lỗi kết nối: ${e.message}`, true);
+        if (btn) { btn.disabled = false; btn.textContent = '✅ Thử lại'; }
     }
 }

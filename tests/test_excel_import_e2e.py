@@ -104,6 +104,56 @@ def post_excel(client, buf, filename='test.xlsx'):
     )
 
 
+def post_preview(client, buf, filename='test.xlsx'):
+    return client.post(
+        '/api/phien-dieu-tri/preview-excel',
+        data={'file': (buf, filename)},
+        content_type='multipart/form-data',
+    )
+
+
+# ---------- PREVIEW (xem trước, KHÔNG ghi DB) ----------
+
+def test_preview_valid_row_no_write(client, seeded):
+    buf = build_xlsx([make_row(
+        ho_ten='BN Preview', ngay_bd='2026-04-01 08:00:00',
+        ngay_kt='2026-04-01 12:00:00', may='Máy thận HDF số 1')])
+    d = post_preview(client, buf).get_json()
+    assert d['ok'] is True
+    assert d['total'] == 1 and d['valid'] == 1 and d['invalid'] == 0
+    assert d['rows'][0]['status'] == 'ok'
+    assert d['rows'][0]['may'] == 'Máy thận HDF số 1'
+    assert phien_dieu_tri.count() == 0, 'Preview KHÔNG được ghi DB'
+
+
+def test_preview_flags_errors_no_write(client, seeded):
+    buf = build_xlsx([
+        make_row(ho_ten='BN OK', ngay_bd='2026-04-01 08:00:00',
+                 ngay_kt='2026-04-01 12:00:00', may='Máy thận HDF số 1'),
+        make_row(stt=2, ho_ten='BN Lỗi', ngay_bd='',
+                 ngay_kt='2026-04-01 12:00:00', may='Máy thận HDF số 1'),
+    ])
+    d = post_preview(client, buf).get_json()
+    assert d['total'] == 2 and d['valid'] == 1 and d['invalid'] == 1
+    assert phien_dieu_tri.count() == 0
+    err = [r for r in d['rows'] if r['status'] == 'error'][0]
+    assert any('Thiếu ngày bắt đầu' in e for e in err['errors'])
+
+
+def test_preview_then_import_consistent(client, seeded):
+    """Preview báo N hợp lệ → import thật phải success đúng N."""
+    rows = [
+        make_row(ho_ten='BN A', ngay_bd='2026-04-01 08:00:00',
+                 ngay_kt='2026-04-01 12:00:00', may='Máy thận HDF số 1'),
+        make_row(stt=2, ho_ten='BN B', ngay_bd='2026-04-02 08:00:00',
+                 ngay_kt='2026-04-02 12:00:00', may='Máy thận HDF số 2'),
+    ]
+    pv = post_preview(client, build_xlsx(rows)).get_json()
+    assert pv['valid'] == 2
+    im = post_excel(client, build_xlsx(rows)).get_json()
+    assert im['success'] == pv['valid']
+
+
 # ---------- FILE-LEVEL VALIDATION ----------
 
 def test_no_file_400(client):

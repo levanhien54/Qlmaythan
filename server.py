@@ -16,7 +16,7 @@ from flask_cors import CORS
 from database.models import create_all_tables
 from database.queries import thiet_bi, nhan_vien, bao_duong, phien_dieu_tri, ban_giao
 from config import TAN_SUAT, LOAI_BAO_DUONG, TRANG_THAI_BAO_DUONG, CHUC_VU
-from excel_import import parse_workbook, import_sessions, ExcelParseError
+from excel_import import parse_workbook, import_sessions, preview_sessions, ExcelParseError
 
 app = Flask(__name__, static_folder='web', static_url_path='')
 CORS(app)
@@ -589,6 +589,36 @@ def api_import_excel():
             'error': f'Lỗi hệ thống: {str(e)}',
             'trace': traceback.format_exc()
         }), 500
+
+
+@app.route('/api/phien-dieu-tri/preview-excel', methods=['POST'])
+def api_preview_excel():
+    """Xem trước import: parse + validate + map từng dòng nhưng KHÔNG ghi DB.
+    Dùng để người dùng kiểm tra trước khi xác nhận nhập thật."""
+    import traceback
+    try:
+        if 'file' not in request.files:
+            return jsonify({'ok': False, 'error': 'Không tìm thấy file trong request'}), 400
+        f = request.files['file']
+        if not f.filename:
+            return jsonify({'ok': False, 'error': 'Tên file rỗng'}), 400
+        ext = f.filename.rsplit('.', 1)[-1].lower() if '.' in f.filename else ''
+        if ext not in ('xls', 'xlsx'):
+            return jsonify({'ok': False, 'error': f'Định dạng .{ext} không hỗ trợ. Chỉ chấp nhận .xls hoặc .xlsx'}), 400
+        file_bytes = f.read()
+        if not file_bytes:
+            return jsonify({'ok': False, 'error': 'File rỗng (0 bytes)'}), 400
+        if len(file_bytes) > 50 * 1024 * 1024:
+            return jsonify({'ok': False, 'error': 'File quá lớn (>50MB)'}), 400
+        try:
+            rows_data, datemode = parse_workbook(file_bytes, ext)
+        except ExcelParseError as e:
+            return jsonify({'ok': False, 'error': str(e)}), 400
+        plan = preview_sessions(rows_data, datemode)
+        return jsonify({'ok': True, **plan})
+    except Exception as e:
+        return jsonify({'ok': False, 'error': f'Lỗi hệ thống: {str(e)}',
+                        'trace': traceback.format_exc()}), 500
 
 
 if __name__ == '__main__':
