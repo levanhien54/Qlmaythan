@@ -159,6 +159,42 @@ def test_live_overlap_guard_independent_of_snapshot(client, seeded, monkeypatch)
     assert any('Trùng thời gian (DB)' in e for e in d['errors'][0]['errors'])
 
 
+def test_constraint_absurd_date_rejected(client, seeded):
+    """C: ngày phi lý (năm ngoài 2000–2100) bị loại."""
+    buf = build_xlsx([make_row(ho_ten='BN 2206', ngay_bd='2206-01-01 08:00:00',
+                     ngay_kt='2206-01-01 12:00:00', may='Máy thận HDF số 1')])
+    d = post_preview(client, buf).get_json()
+    assert d['invalid'] == 1
+    assert any('bất thường' in e for e in d['rows'][0]['errors'])
+
+
+def test_constraint_absurd_duration_rejected(client, seeded):
+    """D: thời lượng < 10 phút hoặc > 12 giờ bị loại."""
+    buf = build_xlsx([
+        make_row(stt=1, ho_ten='BN 3 ngày', ngay_bd='2026-04-10 08:00:00',
+                 ngay_kt='2026-04-13 08:00:00', may='Máy thận HDF số 1'),
+        make_row(stt=2, ho_ten='BN 1 phút', ngay_bd='2026-04-10 08:00:00',
+                 ngay_kt='2026-04-10 08:01:00', may='Máy thận HDF số 2'),
+    ])
+    d = post_preview(client, buf).get_json()
+    assert d['invalid'] == 2
+    assert all(any('Thời lượng' in e for e in r['errors']) for r in d['rows'])
+
+
+def test_constraint_same_patient_two_machines_warning(client, seeded):
+    """A: cùng bệnh nhân đè giờ trên 2 máy khác nhau → CẢNH BÁO (vẫn nhập)."""
+    buf = build_xlsx([
+        make_row(stt=1, ho_ten='Nguyễn Văn X', ngay_bd='2026-04-01 08:00:00',
+                 ngay_kt='2026-04-01 12:00:00', may='Máy thận HDF số 1'),
+        make_row(stt=2, ho_ten='Nguyễn Văn X', ngay_bd='2026-04-01 09:00:00',
+                 ngay_kt='2026-04-01 13:00:00', may='Máy thận HDF số 2'),
+    ])
+    d = post_preview(client, buf).get_json()
+    assert d['valid'] == 2 and d['warnings'] >= 1   # không reject, chỉ cảnh báo
+    warned = [r for r in d['rows'] if r['warnings']]
+    assert warned and any('đè giờ trên' in w for w in warned[0]['warnings'])
+
+
 def test_preview_then_import_consistent(client, seeded):
     """Preview báo N hợp lệ → import thật phải success đúng N."""
     rows = [

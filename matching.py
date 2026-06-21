@@ -22,6 +22,23 @@ def _extract_numbers(s: str) -> set:
     return {int(n) for n in re.findall(r'\d+', s)}
 
 
+def _word_substring(small: str, big: str) -> bool:
+    """True nếu `small` nằm trong `big` ở RANH GIỚI TỪ (đầu/cuối chuỗi hoặc cạnh
+    dấu cách). Tránh 'lê văn a' khớp nhầm 'lê văn an' (token cuối 'a' ≠ 'an')."""
+    if not small or not big:
+        return False
+    if small == big:
+        return True
+    i = big.find(small)
+    while i != -1:
+        before = i == 0 or big[i - 1] == ' '
+        after = i + len(small) == len(big) or big[i + len(small)] == ' '
+        if before and after:
+            return True
+        i = big.find(small, i + 1)
+    return False
+
+
 DATE_FORMATS = [
     # Việt Nam style: dd/mm/yyyy
     '%d/%m/%Y %H:%M:%S', '%d/%m/%Y %H:%M', '%d/%m/%Y',
@@ -283,11 +300,11 @@ def find_staff(name_raw, all_staff: list):
     for s in all_staff:
         s_lower = _norm(s['ho_ten'])
         s_stripped = strip_title(s['ho_ten'])
-        if name_lower in s_lower or s_lower in name_lower:
+        if _word_substring(name_lower, s_lower) or _word_substring(s_lower, name_lower):
             candidates.append(s)
             continue
         if name_stripped and s_stripped and (
-            name_stripped in s_stripped or s_stripped in name_stripped
+            _word_substring(name_stripped, s_stripped) or _word_substring(s_stripped, name_stripped)
         ):
             candidates.append(s)
 

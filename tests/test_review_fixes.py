@@ -8,7 +8,7 @@ Khoá hành vi đúng cho các fix nghiêm trọng nhất:
 """
 import pytest
 
-from matching import find_device, parse_excel_datetime
+from matching import find_device, parse_excel_datetime, find_staff
 from database.queries import thiet_bi, bao_duong, phien_dieu_tri, ban_giao
 
 
@@ -43,6 +43,14 @@ def test_find_device_leading_zero_matches():
     ]
     id_, _, _ = find_device("F09", devices)
     assert id_ == 9
+
+
+def test_find_staff_prefix_not_mismatched():
+    """'Lê Văn A' KHÔNG được gán nhầm 'Lê Văn An' (token cuối khác) — khớp
+    chuỗi-con phải theo ranh giới từ."""
+    staff = [{'id': 1, 'ho_ten': 'Lê Văn An'}]
+    assert find_staff('Lê Văn A', staff)[0] == -1   # mơ hồ/sai → loại
+    assert find_staff('Lê Văn An', staff)[0] == 1   # đúng tên đầy đủ → khớp
 
 
 def test_find_device_ambiguous_returns_none_not_guess():

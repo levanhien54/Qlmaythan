@@ -167,25 +167,35 @@ function showImportPreview(file, p) {
     if (!p.rows || !p.rows.length) {
         return toast('File không có dòng dữ liệu nào để nhập', true);
     }
-    const rowsHtml = p.rows.map(r => `<tr>
-        <td style="text-align:center">${r.row}</td>
-        <td style="text-align:center;color:${r.status === 'ok' ? '#00c853' : '#e94560'}">${r.status === 'ok' ? '✓' : '✕'}</td>
-        <td>${esc(r.ho_ten)}</td>
-        <td>${esc(r.may || '')}</td>
-        <td>${esc((r.ngay_bat_dau || '').substring(0, 16))}</td>
-        <td style="color:#e94560">${esc((r.errors || []).join('; '))}</td>
-    </tr>`).join('');
+    const rowsHtml = p.rows.map(r => {
+        const hasErr = r.errors && r.errors.length;
+        const hasWarn = r.warnings && r.warnings.length;
+        const icon = hasErr ? '<span style="color:#e94560">✕</span>'
+            : hasWarn ? '<span style="color:#f0a020">⚠</span>'
+            : '<span style="color:#00c853">✓</span>';
+        const msg = hasErr ? `<span style="color:#e94560">${esc(r.errors.join('; '))}</span>`
+            : hasWarn ? `<span style="color:#f0a020">⚠ ${esc(r.warnings.join('; '))}</span>` : '';
+        return `<tr>
+            <td style="text-align:center">${r.row}</td>
+            <td style="text-align:center">${icon}</td>
+            <td>${esc(r.ho_ten)}</td>
+            <td>${esc(r.may || '')}</td>
+            <td>${esc((r.ngay_bat_dau || '').substring(0, 16))}</td>
+            <td>${msg}</td>
+        </tr>`;
+    }).join('');
     const capped = p.total > p.rows.length
         ? `<div style="color:var(--text-muted);margin-top:6px">Hiển thị ${p.rows.length}/${p.total} dòng.</div>` : '';
+    const warnLine = p.warnings ? ` &nbsp;|&nbsp; <b style="color:#f0a020">${p.warnings} cảnh báo</b>` : '';
     const body = `
         <div style="margin-bottom:10px">Tổng <b>${p.total}</b> dòng —
             <b style="color:#00c853">${p.valid} hợp lệ</b>,
-            <b style="color:#e94560">${p.invalid} lỗi</b></div>
+            <b style="color:#e94560">${p.invalid} lỗi</b>${warnLine}</div>
         <div style="max-height:48vh;overflow:auto;border:1px solid var(--border);border-radius:6px">
             <table style="width:100%;border-collapse:collapse;font-size:13px">
                 <thead><tr style="position:sticky;top:0;background:var(--bg-card)">
                     <th style="padding:6px">Dòng</th><th></th><th style="text-align:left;padding:6px">Họ tên</th>
-                    <th style="text-align:left">Máy</th><th style="text-align:left">Ngày BĐ</th><th style="text-align:left">Lỗi</th>
+                    <th style="text-align:left">Máy</th><th style="text-align:left">Ngày BĐ</th><th style="text-align:left">Lỗi / Cảnh báo</th>
                 </tr></thead>
                 <tbody>${rowsHtml}</tbody>
             </table>
