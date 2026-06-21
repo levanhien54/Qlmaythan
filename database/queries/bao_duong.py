@@ -100,13 +100,15 @@ def delete(bd_id: int):
 
 def get_upcoming(days: int = 7) -> list:
     """Lấy danh sách bảo dưỡng sắp đến hạn."""
+    # date('now') của SQLite là UTC → ở VN (UTC+7) cửa sổ "đến hạn" lệch ngày.
+    # Dùng 'localtime' để mốc hôm nay khớp lịch địa phương.
     return db.fetch_all("""
         SELECT bd.*, tb.ten_thiet_bi
         FROM bao_duong bd
         LEFT JOIN thiet_bi tb ON bd.thiet_bi_id = tb.id
         WHERE bd.ngay_du_kien_tiep_theo IS NOT NULL
-          AND bd.ngay_du_kien_tiep_theo <= date('now', '+' || ? || ' days')
-          AND bd.ngay_du_kien_tiep_theo >= date('now')
+          AND bd.ngay_du_kien_tiep_theo <= date('now', 'localtime', '+' || ? || ' days')
+          AND bd.ngay_du_kien_tiep_theo >= date('now', 'localtime')
         ORDER BY bd.ngay_du_kien_tiep_theo
     """, (days,))
 

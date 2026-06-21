@@ -9,7 +9,7 @@ Khoá hành vi đúng cho các fix nghiêm trọng nhất:
 import pytest
 
 from matching import find_device
-from database.queries import thiet_bi, bao_duong
+from database.queries import thiet_bi, bao_duong, phien_dieu_tri, ban_giao
 
 
 # ---------- #2 find_device: số đơn KHÔNG khớp số nhiều chữ số ----------
@@ -84,3 +84,53 @@ def test_maintenance_date_filter_includes_time_component(temp_db):
                      ngay_thuc_hien="2026-04-01 14:30")
     rows = bao_duong.get_all(from_date="2026-04-01", to_date="2026-04-01")
     assert len(rows) == 1, "Phiếu có giờ phải xuất hiện trong bộ lọc cùng ngày"
+
+
+# ---------- R2 sessions_per_machine: gom theo thiet_bi_id ----------
+
+def test_sessions_per_machine_groups_by_device_not_text(temp_db):
+    """Cùng 1 máy (thiet_bi_id) nhưng may_thuc_hien khác chữ / rỗng → 1 nhóm."""
+    tid = thiet_bi.create(ten_thiet_bi="Máy số 1")
+    phien_dieu_tri.create(ho_ten="BN A", thiet_bi_id=tid, may_thuc_hien="Máy số 1",
+                          ngay_bat_dau="2026-04-01 08:00:00")
+    phien_dieu_tri.create(ho_ten="BN B", thiet_bi_id=tid, may_thuc_hien="May 1",
+                          ngay_bat_dau="2026-04-02 08:00:00")
+    phien_dieu_tri.create(ho_ten="BN C", thiet_bi_id=tid, may_thuc_hien="",
+                          ngay_bat_dau="2026-04-03 08:00:00")
+    rows = phien_dieu_tri.sessions_per_machine()
+    assert len(rows) == 1, "3 phiên cùng máy phải gom 1 nhóm, không tách theo chữ"
+    assert rows[0]["so_phien"] == 3
+    assert rows[0]["may_thuc_hien"] == "Máy số 1"  # nhãn = tên thiết bị
+
+
+def test_sessions_per_machine_unmatched_kept_by_text(temp_db):
+    """Phiên chưa map máy (thiet_bi_id NULL) vẫn được gom theo may_thuc_hien."""
+    phien_dieu_tri.create(ho_ten="BN X", thiet_bi_id=None, may_thuc_hien="Máy lạ",
+                          ngay_bat_dau="2026-04-01 08:00:00")
+    rows = phien_dieu_tri.sessions_per_machine()
+    assert any(r["may_thuc_hien"] == "Máy lạ" and r["so_phien"] == 1 for r in rows)
+
+
+# ---------- R7 check_duplicates: so khớp theo NGÀY kể cả khi lưu kèm giờ ----------
+
+def test_check_duplicates_matches_datetime_stored_value(temp_db):
+    """Bàn giao lưu '2026-04-01 08:00:00' vẫn bị bắt trùng khi nhập ngày '2026-04-01'."""
+    tid = thiet_bi.create(ten_thiet_bi="Máy A")
+    ban_giao.create(thiet_bi_id=tid, ngay_ban_giao="2026-04-01 08:00:00")
+    dups = ban_giao.check_duplicates([tid], "2026-04-01")
+    assert len(dups) == 1
+
+
+# ---------- R8 _validate_session_payload: tuoi dạng chuỗi không gây 500 ----------
+
+def test_validate_payload_string_age_no_crash():
+    from server import _validate_session_payload
+    base = {"ho_ten": "Nguyễn Văn A", "ngay_bat_dau": "2026-04-01 08:00:00"}
+    # chuỗi số hợp lệ → OK
+    assert _validate_session_payload({**base, "tuoi": "50"}) is None
+    # chuỗi ngoài phạm vi → lỗi 400, KHÔNG raise TypeError
+    err = _validate_session_payload({**base, "tuoi": "200"})
+    assert err and err[1] == 400
+    # chuỗi không phải số → lỗi 400
+    err = _validate_session_payload({**base, "tuoi": "abc"})
+    assert err and err[1] == 400

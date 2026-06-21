@@ -73,3 +73,32 @@ def test_data_table_zero_renders_as_zero(qapp):
 def test_excel_import_helper_available():
     from excel_import import import_from_path, ExcelParseError  # noqa
     assert callable(import_from_path)
+
+
+# ---------- R3/R5 SessionDialog: giữ may_thuc_hien + chịu được NULL ----------
+
+def test_session_dialog_preserves_may_thuc_hien_when_unmatched(qapp, temp_db):
+    """Sửa phiên có thiet_bi_id NULL + may_thuc_hien text, không chọn máy:
+    _save phải GIỮ nguyên may_thuc_hien (không ghi đè rỗng)."""
+    from ui.dialogs.session_dialog import SessionDialog
+    dlg = SessionDialog(data={
+        "ho_ten": "BN Test", "thiet_bi_id": None, "may_thuc_hien": "Máy 5",
+        "ngay_bat_dau": "2026-04-01 08:00:00",
+        "ngay_ket_thuc": "2026-04-01 12:00:00",
+        "tuoi": None, "dia_chi": None, "so_ho_so": None, "ghi_chu": None,
+    })
+    dlg._save()
+    assert dlg.result_data is not None, "NULL fields không được làm crash _populate"
+    assert dlg.result_data["may_thuc_hien"] == "Máy 5", "Không được wipe tên máy"
+
+
+def test_session_dialog_rejects_end_before_start(qapp, temp_db):
+    """Ngày kết thúc <= bắt đầu → _save không tạo result_data (validate)."""
+    from PyQt6.QtCore import QDateTime
+    from ui.dialogs.session_dialog import SessionDialog
+    dlg = SessionDialog()
+    dlg.txt_ho_ten.setText("BN Test")
+    dlg.dt_bat_dau.setDateTime(QDateTime.fromString("2026-04-01 12:00:00", "yyyy-MM-dd hh:mm:ss"))
+    dlg.dt_ket_thuc.setDateTime(QDateTime.fromString("2026-04-01 08:00:00", "yyyy-MM-dd hh:mm:ss"))
+    dlg._save()
+    assert dlg.result_data is None, "Phiên end<start không được lưu"

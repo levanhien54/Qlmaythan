@@ -72,7 +72,7 @@ def check_duplicates(device_ids: list, ngay: str, exclude_id: int = None) -> lis
         FROM ban_giao bg
         LEFT JOIN thiet_bi tb ON bg.thiet_bi_id = tb.id
         WHERE bg.thiet_bi_id IN ({placeholders})
-          AND bg.ngay_ban_giao = ?
+          AND DATE(bg.ngay_ban_giao) = DATE(?)
     """
     params = list(device_ids) + [ngay]
     if exclude_id:

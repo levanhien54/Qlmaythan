@@ -207,10 +207,9 @@ class StatisticsPage(QWidget):
         all_devices = thiet_bi.get_all()
         usage_data = {}
         for d in all_devices:
-            name = d["ten_thiet_bi"]
-            if len(name) > 30:
-                name = name[:28] + "..."
-            usage_data[name] = d.get("tan_suat_su_dung", 0)
+            # Dùng tên đầy đủ làm khóa (BarChartWidget tự cắt nhãn khi vẽ); cắt
+            # ngắn ở đây gây trùng khóa → 2 máy đè nhau, mất 1 cột.
+            usage_data[d["ten_thiet_bi"]] = d.get("tan_suat_su_dung", 0)
         # Sort by usage desc
         usage_data = dict(sorted(usage_data.items(), key=lambda x: x[1], reverse=True))
         self.chart_usage.set_data(usage_data)

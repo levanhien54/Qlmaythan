@@ -107,16 +107,16 @@ class SessionsPage(QWidget):
             display.append({
                 "id": r["id"],
                 "stt": i,
-                "ho_ten": r.get("ho_ten", ""),
-                "tuoi": r.get("tuoi", ""),
-                "dia_chi": r.get("dia_chi", "")[:30],
-                "so_hs": r.get("so_ho_so", ""),
+                "ho_ten": r.get("ho_ten") or "",
+                "tuoi": r.get("tuoi") if r.get("tuoi") is not None else "",
+                "dia_chi": (r.get("dia_chi") or "")[:30],
+                "so_hs": r.get("so_ho_so") or "",
                 "ngay_bd": ngay_bd,
                 "ngay_kt": ngay_kt,
-                "ptv": r.get("ptv_chinh_ten", ""),
-                "phu1": r.get("phu_1_ten", ""),
-                "may": r.get("may_thuc_hien", ""),
-                "ghi_chu": r.get("ghi_chu", "")[:30],
+                "ptv": r.get("ptv_chinh_ten") or "",
+                "phu1": r.get("phu_1_ten") or "",
+                "may": r.get("may_thuc_hien") or "",
+                "ghi_chu": (r.get("ghi_chu") or "")[:30],
             })
 
         self.table.load_data(display, id_key="id", display_keys=[
@@ -125,10 +125,34 @@ class SessionsPage(QWidget):
         ])
         self.lbl_count.setText(f"Tổng: {len(rows)} phiên")
 
+    def _conflict_msg(self, d: dict, exclude_id: int = None) -> str:
+        """Trả về thông báo nếu phiên trùng khung giờ trên cùng máy, None nếu OK.
+        Khớp logic chặn trùng của web API (trước đây desktop bỏ sót)."""
+        tb_id = d.get("thiet_bi_id")
+        bd = d.get("ngay_bat_dau")
+        if not (tb_id and bd):
+            return None
+        c = phien_dieu_tri.check_time_overlap(
+            tb_id, bd, d.get("ngay_ket_thuc"), exclude_id=exclude_id
+        )
+        if c:
+            return (f"Máy đang có phiên của \"{c['ho_ten']}\" từ "
+                    f"{c['ngay_bat_dau']} đến {c['ngay_ket_thuc'] or '(chưa kết thúc)'}.\n"
+                    f"Không thể lưu phiên trùng thời gian trên cùng 1 máy.")
+        return None
+
     def _add(self):
         dlg = SessionDialog(parent=self)
         if dlg.exec() and dlg.result_data:
-            phien_dieu_tri.create(**dlg.result_data)
+            conflict = self._conflict_msg(dlg.result_data)
+            if conflict:
+                QMessageBox.warning(self, "Trùng khung giờ", conflict)
+                return
+            try:
+                phien_dieu_tri.create(**dlg.result_data)
+            except phien_dieu_tri.DuplicateSessionError as e:
+                QMessageBox.warning(self, "Trùng phiên", str(e))
+                return
             self.refresh_data()
 
     def _edit(self, pdt_id: int):
@@ -137,7 +161,15 @@ class SessionsPage(QWidget):
             return
         dlg = SessionDialog(data=data, parent=self)
         if dlg.exec() and dlg.result_data:
-            phien_dieu_tri.update(pdt_id, **dlg.result_data)
+            conflict = self._conflict_msg(dlg.result_data, exclude_id=pdt_id)
+            if conflict:
+                QMessageBox.warning(self, "Trùng khung giờ", conflict)
+                return
+            try:
+                phien_dieu_tri.update(pdt_id, **dlg.result_data)
+            except phien_dieu_tri.DuplicateSessionError as e:
+                QMessageBox.warning(self, "Trùng phiên", str(e))
+                return
             self.refresh_data()
 
     def _delete(self, pdt_id: int):

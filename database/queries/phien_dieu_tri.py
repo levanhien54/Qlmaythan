@@ -156,21 +156,32 @@ def count() -> int:
 
 
 def count_today() -> int:
-    """Đếm số phiên hôm nay."""
+    """Đếm số phiên hôm nay (theo giờ ĐỊA PHƯƠNG, không phải UTC).
+    date('now') của SQLite trả ngày UTC → lệch tới 7h ở VN (UTC+7); dùng
+    'localtime' để 'hôm nay' khớp lịch người dùng."""
     row = db.fetch_one("""
         SELECT COUNT(*) as total FROM phien_dieu_tri
-        WHERE date(ngay_bat_dau) = date('now')
+        WHERE date(ngay_bat_dau) = date('now', 'localtime')
     """)
     return row["total"] if row else 0
 
 
 def sessions_per_machine() -> list:
-    """Số phiên theo máy."""
+    """Số phiên theo máy.
+
+    Gom theo thiet_bi_id (join tên thiết bị) để KHÔNG bị tách nhỏ vì biến thể
+    chữ của may_thuc_hien (vd 'Máy 1' vs 'May 1'), và để KHÔNG bỏ sót phiên
+    import có thiet_bi_id nhưng may_thuc_hien rỗng. Phiên chưa map được máy
+    (thiet_bi_id NULL) gom theo chính chuỗi may_thuc_hien.
+    Khóa hiển thị giữ tên 'may_thuc_hien' để tương thích caller cũ.
+    """
     return db.fetch_all("""
-        SELECT may_thuc_hien, COUNT(*) AS so_phien
-        FROM phien_dieu_tri
-        WHERE may_thuc_hien != ''
-        GROUP BY may_thuc_hien
+        SELECT COALESCE(tb.ten_thiet_bi, p.may_thuc_hien) AS may_thuc_hien,
+               COUNT(*) AS so_phien
+        FROM phien_dieu_tri p
+        LEFT JOIN thiet_bi tb ON p.thiet_bi_id = tb.id
+        WHERE COALESCE(tb.ten_thiet_bi, p.may_thuc_hien) != ''
+        GROUP BY COALESCE(p.thiet_bi_id, p.may_thuc_hien)
         ORDER BY so_phien DESC
     """)
 

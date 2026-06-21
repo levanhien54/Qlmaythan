@@ -128,9 +128,9 @@ class MaintenancePage(QWidget):
                 "stt": i,
                 "thiet_bi": r.get("ten_thiet_bi", ""),
                 "loai": r.get("loai", ""),
-                "ngay_th": r.get("ngay_thuc_hien", ""),
-                "nguoi_th": r.get("nguoi_thuc_hien_ten", ""),
-                "mo_ta": r.get("mo_ta", "")[:50],
+                "ngay_th": r.get("ngay_thuc_hien") or "",
+                "nguoi_th": r.get("nguoi_thuc_hien_ten") or "",
+                "mo_ta": (r.get("mo_ta") or "")[:50],
                 "chi_phi": chi_phi,
                 "trang_thai": r.get("trang_thai", ""),
             })

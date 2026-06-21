@@ -199,9 +199,16 @@ def _validate_session_payload(data):
     kt = data.get('ngay_ket_thuc')
     if kt and kt <= bd:
         return f'Ngày kết thúc ({kt}) phải sau ngày bắt đầu ({bd})', 400
-    tuoi = data.get('tuoi', 0)
-    if tuoi and (tuoi < 0 or tuoi > 120):
-        return f'Tuổi ngoài phạm vi (1-120): {tuoi}', 400
+    # tuoi có thể đến dạng chuỗi từ client → ép kiểu an toàn, tránh TypeError
+    # khi so sánh str < int (gây 500) và để chuỗi ngoài phạm vi vẫn bị bắt.
+    tuoi_raw = data.get('tuoi', 0)
+    if tuoi_raw not in (None, '', 0, '0'):
+        try:
+            tuoi = int(float(str(tuoi_raw).strip()))
+        except (ValueError, TypeError):
+            return f'Tuổi không hợp lệ: {tuoi_raw}', 400
+        if tuoi < 0 or tuoi > 120:
+            return f'Tuổi ngoài phạm vi (1-120): {tuoi}', 400
     return None
 
 
@@ -496,7 +503,9 @@ def api_statistics():
     active = status.get('Hoạt động', 0)
     rate = int((active / total_devices) * 100) if total_devices > 0 else 0
     all_devices = thiet_bi.get_all()
-    usage_data = {d['ten_thiet_bi'][:30]: d.get('tan_suat_su_dung', 0) for d in all_devices}
+    # Dùng TÊN ĐẦY ĐỦ làm khóa (frontend tự cắt ngắn khi hiển thị). Cắt [:30] ở
+    # đây khiến 2 máy trùng 30 ký tự đầu đè nhau → mất 1 máy trên biểu đồ.
+    usage_data = {d['ten_thiet_bi']: d.get('tan_suat_su_dung', 0) for d in all_devices}
     usage_sorted = dict(sorted(usage_data.items(), key=lambda x: x[1], reverse=True))
     return jsonify({
         'total_cost': total_cost,

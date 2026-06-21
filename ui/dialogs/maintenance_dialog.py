@@ -120,8 +120,9 @@ class MaintenanceDialog(QDialog):
         if idx >= 0:
             self.cb_nguoi_th.setCurrentIndex(idx)
 
-        self.txt_mo_ta.setText(data.get("mo_ta", ""))
-        self.spin_chi_phi.setValue(data.get("chi_phi", 0))
+        # `or default`: cột NULL → None làm setText/setValue crash.
+        self.txt_mo_ta.setText(data.get("mo_ta") or "")
+        self.spin_chi_phi.setValue(data.get("chi_phi") or 0)
 
         idx = self.cb_trang_thai.findText(data.get("trang_thai", ""))
         if idx >= 0:

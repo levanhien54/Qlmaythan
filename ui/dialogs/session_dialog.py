@@ -103,10 +103,12 @@ class SessionDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def _populate(self, data: dict):
-        self.txt_ho_ten.setText(data.get("ho_ten", ""))
-        self.spin_tuoi.setValue(data.get("tuoi", 0))
-        self.txt_dia_chi.setText(data.get("dia_chi", ""))
-        self.txt_so_hs.setText(data.get("so_ho_so", ""))
+        # Dùng `or default`: cột NULL trong DB trả None (key tồn tại) → setText(None)
+        # / setValue(None) sẽ crash; `or` quy về giá trị mặc định an toàn.
+        self.txt_ho_ten.setText(data.get("ho_ten") or "")
+        self.spin_tuoi.setValue(data.get("tuoi") or 0)
+        self.txt_dia_chi.setText(data.get("dia_chi") or "")
+        self.txt_so_hs.setText(data.get("so_ho_so") or "")
 
         if data.get("ngay_bat_dau"):
             self.dt_bat_dau.setDateTime(
@@ -126,14 +128,25 @@ class SessionDialog(QDialog):
         idx = self.cb_phu1.findData(data.get("phu_1_id"))
         if idx >= 0:
             self.cb_phu1.setCurrentIndex(idx)
-        self.txt_ghi_chu.setText(data.get("ghi_chu", ""))
+        self.txt_ghi_chu.setText(data.get("ghi_chu") or "")
 
     def _save(self):
         if not self.txt_ho_ten.text().strip():
             self.txt_ho_ten.setFocus()
             return
+        # Validate ngày: kết thúc phải sau bắt đầu (khớp ràng buộc của web API).
+        bd = self.dt_bat_dau.dateTime()
+        kt = self.dt_ket_thuc.dateTime()
+        if kt <= bd:
+            self.dt_ket_thuc.setFocus()
+            return
         tb_id = self.cb_thiet_bi.currentData()
-        may_text = self.cb_thiet_bi.currentText() if tb_id else ""
+        # Khi KHÔNG chọn máy: GIỮ NGUYÊN may_thuc_hien gốc (vd phiên import chưa
+        # map được thiết bị) thay vì ghi đè rỗng → tránh mất tên máy đã lưu.
+        if tb_id:
+            may_text = self.cb_thiet_bi.currentText()
+        else:
+            may_text = (self.data or {}).get("may_thuc_hien", "") or ""
         self.result_data = {
             "ho_ten": self.txt_ho_ten.text().strip(),
             "tuoi": self.spin_tuoi.value(),

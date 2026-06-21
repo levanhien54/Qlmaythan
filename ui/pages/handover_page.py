@@ -92,8 +92,8 @@ class HandoverPage(QWidget):
                 "thiet_bi": r.get("ten_thiet_bi", ""),
                 "nguoi_giao": r.get("nguoi_giao_ten", ""),
                 "nguoi_nhan": r.get("nguoi_nhan_ten", ""),
-                "ngay": r.get("ngay_ban_giao", ""),
-                "ghi_chu": r.get("ghi_chu", "")[:50],
+                "ngay": r.get("ngay_ban_giao") or "",
+                "ghi_chu": (r.get("ghi_chu") or "")[:50],
             })
 
         self.table.load_data(display, id_key="id", display_keys=[
