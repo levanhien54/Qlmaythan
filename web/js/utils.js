@@ -20,6 +20,14 @@ function esc(v) {
         .replace(/'/g, '&#39;');
 }
 
+// Cắt giữa chuỗi, GIỮ phần đuôi (vd "...số 8") — tên máy phân biệt nhau ở cuối.
+function midTrunc(s, max = 26) {
+    s = String(s || '');
+    if (s.length <= max) return s;
+    const head = Math.ceil((max - 1) / 2), tail = Math.floor((max - 1) / 2);
+    return s.slice(0, head) + '…' + s.slice(-tail);
+}
+
 // Local date helper (avoids UTC offset issue with toISOString)
 function todayLocal() {
     const d = new Date();
@@ -103,18 +111,30 @@ function toast(msg, isError = false) {
 }
 
 // ========== STATUS BADGE ==========
+// Kèm BIỂU TƯỢNG hình dạng (không chỉ màu) để phân biệt trạng thái khi in
+// trắng-đen / người mù màu. Glyph unicode nên không cần font icon.
 function statusBadge(text) {
     if (!text) return '';
     const t = text.toLowerCase();
-    let cls = 'badge-info';
-    if (t.includes('bình thường') || t.includes('hoạt động')) cls = 'badge-ok';
-    else if (t.includes('hỏng')) cls = 'badge-error';
-    else if (t.includes('lỗi') || t.includes('nghỉ')) cls = 'badge-warning';
-    else if (t.includes('hoàn thành') || t.includes('bàn giao')) cls = 'badge-done';
-    else if (t.includes('thu hồi')) cls = 'badge-warning';
-    else if (t.includes('đang')) cls = 'badge-progress';
-    else if (t.includes('chờ')) cls = 'badge-pending';
-    return `<span class="badge ${cls}">${esc(text)}</span>`;
+    let cls = 'badge-info', icon = '•';
+    if (t.includes('bình thường') || t.includes('hoạt động')) { cls = 'badge-ok'; icon = '✓'; }
+    else if (t.includes('hỏng')) { cls = 'badge-error'; icon = '✕'; }
+    else if (t.includes('lỗi') || t.includes('nghỉ')) { cls = 'badge-warning'; icon = '⚠'; }
+    else if (t.includes('hoàn thành') || t.includes('bàn giao')) { cls = 'badge-done'; icon = '✓'; }
+    else if (t.includes('thu hồi')) { cls = 'badge-warning'; icon = '↩'; }
+    else if (t.includes('đang')) { cls = 'badge-progress'; icon = '⟳'; }
+    else if (t.includes('chờ')) { cls = 'badge-pending'; icon = '⏳'; }
+    return `<span class="badge ${cls}"><span aria-hidden="true">${icon}</span> ${esc(text)}</span>`;
+}
+
+// ========== INFO MODAL (chỉ hiển thị, không có nút Lưu) ==========
+function showInfoModal(title, bodyHTML) {
+    $('#modalTitle').textContent = title;
+    $('#modalBody').innerHTML = bodyHTML;
+    currentModalSave = null;
+    const f = document.querySelector('#modal .modal-footer');
+    if (f) f.style.display = 'none';   // ẩn Hủy/Lưu cho hộp thoại thông tin
+    $('#modalOverlay').classList.add('open');
 }
 
 // ========== CHART COLORS ==========
@@ -129,6 +149,8 @@ function openModal(title, bodyHTML, saveFn) {
     $('#modalBody').innerHTML = bodyHTML;
     currentModalSave = saveFn;
     $('#modalSave').textContent = '💾 Lưu';
+    const _f = document.querySelector('#modal .modal-footer');
+    if (_f) _f.style.display = '';   // khôi phục footer (showInfoModal có thể đã ẩn)
     $('#modalOverlay').classList.add('open');
     // Auto-init time inputs (HH:MM text fields)
     $$('#modalBody input[placeholder="HH:MM"]').forEach(el => initTimeInput(el));

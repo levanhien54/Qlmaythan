@@ -153,6 +153,8 @@ def test_screen_statistics(client):
     for key in ('total_cost', 'top_machine', 'active_rate', 'usage_per_device', 'sessions_per_machine'):
         assert key in s, f"statistics thiếu khóa {key}"
     assert s['active_rate'] == 100  # 1 máy hoạt động / 1 tổng
+    # usage_per_device phải là SỐ PHIÊN thực (1), không phải mã tần suất (3)
+    assert s['usage_per_device'].get('Máy A') == 1
 
 
 # ---------- Config (dùng bởi mọi form) ----------

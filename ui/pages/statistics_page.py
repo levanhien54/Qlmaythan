@@ -73,8 +73,12 @@ class BarChartWidget(QFrame):
             # Label
             painter.setPen(QColor(c["text_secondary"]))
             painter.setFont(QFont("Segoe UI", 9))
-            label_text = str(label)[:25]
-            painter.drawText(m, y + bar_h - 4, label_text)
+            # Cắt giữa, giữ đuôi (vd "...số 8") để phân biệt máy; cắt [:25] cũ
+            # làm mất số máy ở cuối tên.
+            lbl = str(label)
+            if len(lbl) > 24:
+                lbl = lbl[:11] + '…' + lbl[-10:]
+            painter.drawText(m, y + bar_h - 4, lbl)
 
             # Bar
             bar_w = int((value / max_val) * chart_w) if max_val > 0 else 0
@@ -141,7 +145,7 @@ class StatisticsPage(QWidget):
         layout.addLayout(summary_layout)
 
         # Charts
-        self.chart_usage = BarChartWidget("Tần suất sử dụng theo máy")
+        self.chart_usage = BarChartWidget("Số phiên điều trị theo máy")
         self.chart_usage.setMinimumHeight(400)
         layout.addWidget(self.chart_usage)
 
@@ -207,9 +211,9 @@ class StatisticsPage(QWidget):
         all_devices = thiet_bi.get_all()
         usage_data = {}
         for d in all_devices:
-            # Dùng tên đầy đủ làm khóa (BarChartWidget tự cắt nhãn khi vẽ); cắt
-            # ngắn ở đây gây trùng khóa → 2 máy đè nhau, mất 1 cột.
-            usage_data[d["ten_thiet_bi"]] = d.get("tan_suat_su_dung", 0)
+            # SỐ PHIÊN thực tế (so_phien), không phải mã tần suất 0-3. Tên đầy đủ
+            # làm khóa (widget tự cắt giữa khi vẽ) tránh trùng khóa mất cột.
+            usage_data[d["ten_thiet_bi"]] = d.get("so_phien", 0)
         # Sort by usage desc
         usage_data = dict(sorted(usage_data.items(), key=lambda x: x[1], reverse=True))
         self.chart_usage.set_data(usage_data)

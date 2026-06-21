@@ -522,9 +522,9 @@ def api_statistics():
     active = status.get('Hoạt động', 0)
     rate = int((active / total_devices) * 100) if total_devices > 0 else 0
     all_devices = thiet_bi.get_all()
-    # Dùng TÊN ĐẦY ĐỦ làm khóa (frontend tự cắt ngắn khi hiển thị). Cắt [:30] ở
-    # đây khiến 2 máy trùng 30 ký tự đầu đè nhau → mất 1 máy trên biểu đồ.
-    usage_data = {d['ten_thiet_bi']: d.get('tan_suat_su_dung', 0) for d in all_devices}
+    # SỐ PHIÊN THỰC TẾ theo máy (so_phien), KHÔNG phải mã tần suất 0-3 (vô nghĩa
+    # khi vẽ cột). Khóa = tên đầy đủ (frontend tự cắt khi hiển thị) tránh trùng khóa.
+    usage_data = {d['ten_thiet_bi']: d.get('so_phien', 0) for d in all_devices}
     usage_sorted = dict(sorted(usage_data.items(), key=lambda x: x[1], reverse=True))
     return jsonify({
         'total_cost': total_cost,

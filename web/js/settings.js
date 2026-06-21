@@ -80,7 +80,7 @@ async function addSettDevice() {
             tinh_trang: $('#f_tinh_trang').value,
             nguoi_quan_ly_id: ssVal('sd_ql') ? parseInt(ssVal('sd_ql')) : null
         })});
-        closeModal(); toast('✅ Đã thêm thiết bị!'); filterSettDevices();
+        closeModal(); toast('Đã thêm thiết bị!'); filterSettDevices();
     });
 }
 
@@ -111,7 +111,7 @@ async function editSettDevice(id) {
             nguoi_quan_ly_id: ssVal('sd_ql') ? parseInt(ssVal('sd_ql')) : null,
             ghi_chu: $('#f_gc').value
         })});
-        closeModal(); toast('✅ Đã cập nhật!'); filterSettDevices();
+        closeModal(); toast('Đã cập nhật!'); filterSettDevices();
     });
 }
 

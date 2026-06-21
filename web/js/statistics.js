@@ -13,19 +13,19 @@ async function renderStatistics(el) {
             <div class="summary-card"><div class="sc-label">📊 Tỷ lệ hoạt động</div><div class="sc-value">${stats.active_rate}%</div></div>
         </div>
         <div class="chart-card" style="margin-bottom:20px">
-            <div class="chart-title">Tần suất sử dụng theo máy (0-3)</div>
+            <div class="chart-title">Số phiên điều trị theo máy (tất cả thiết bị)</div>
             ${Object.entries(stats.usage_per_device).slice(0,25).map(([k,v],i) => `
                 <div class="bar-row">
-                    <div class="bar-label" style="width:200px" title="${esc(k)}">${esc(k.length>25?k.substring(0,23)+'...':k)}</div>
-                    <div class="bar-track"><div class="bar-fill" style="width:${Math.max((v/3)*100,5)}%;background:${barColors(i)}">${v}</div></div>
+                    <div class="bar-label" style="width:200px" title="${esc(k)}">${esc(midTrunc(k))}</div>
+                    <div class="bar-track"><div class="bar-fill" style="width:${maxUsage>0?(v/maxUsage)*100:0}%;background:${barColors(i)}">${v}</div></div>
                 </div>
             `).join('')}
         </div>
         <div class="chart-card">
-            <div class="chart-title">Tần suất theo máy (Top 20)</div>
+            <div class="chart-title">Top 20 máy dùng nhiều nhất</div>
             ${stats.sessions_per_machine.slice(0,20).map((s,i) => `
                 <div class="bar-row">
-                    <div class="bar-label" style="width:200px" title="${esc(s.may_thuc_hien)}">${esc(s.may_thuc_hien.length>25?s.may_thuc_hien.substring(0,23)+'...':s.may_thuc_hien)}</div>
+                    <div class="bar-label" style="width:200px" title="${esc(s.may_thuc_hien)}">${esc(midTrunc(s.may_thuc_hien))}</div>
                     <div class="bar-track"><div class="bar-fill" style="width:${(s.so_phien/maxSes)*100}%;background:${barColors(i)}">${s.so_phien}</div></div>
                 </div>
             `).join('')}

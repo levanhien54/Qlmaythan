@@ -168,32 +168,27 @@ async function importExcelSessions(inputEl) {
             return;
         }
 
-        // Build detailed result message
-        const lines = [];
-        lines.push(`📊 KẾT QUẢ NHẬP FILE: ${file.name}`);
-        lines.push(`━━━━━━━━━━━━━━━━━━━━━━━━`);
-        lines.push(`✅ Thành công: ${data.success}/${data.total} phiên`);
-        if (data.skipped > 0) {
-            lines.push(`❌ Bị từ chối: ${data.skipped} phiên`);
-        }
-        lines.push('');
-
-        if (data.errors && data.errors.length > 0) {
-            lines.push(`⚠️ CHI TIẾT LỖI (${data.errors.length} dòng):`);
-            lines.push('─────────────────────────');
-            data.errors.slice(0, 20).forEach(e => {
-                lines.push(`\n▸ Dòng ${e.row} — ${e.name}:`);
-                (e.errors || [e.error]).forEach(err => {
-                    lines.push(`   • ${err}`);
-                });
-            });
-            if (data.errors.length > 20) {
-                lines.push(`\n... và ${data.errors.length - 20} lỗi khác`);
-            }
-        }
-
+        // Hộp thoại kết quả chi tiết (modal trong app, không dùng al() chặn UI)
         if (data.skipped > 0 || (data.errors && data.errors.length > 0)) {
-            alert(lines.join('\n'));
+            const lines = [];
+            lines.push(`Thành công: ${data.success}/${data.total} phiên`);
+            if (data.skipped > 0) lines.push(`Bị từ chối: ${data.skipped} phiên`);
+            lines.push('');
+            if (data.errors && data.errors.length > 0) {
+                lines.push(`Chi tiết lỗi (${data.errors.length} dòng):`);
+                data.errors.slice(0, 50).forEach(e => {
+                    lines.push(`• Dòng ${e.row} — ${e.name}:`);
+                    (e.errors || [e.error]).forEach(err => lines.push(`    - ${err}`));
+                });
+                if (data.errors.length > 50) {
+                    lines.push(`... và ${data.errors.length - 50} lỗi khác`);
+                }
+            }
+            const body = `<div style="max-height:55vh;overflow:auto;white-space:pre-wrap;`
+                + `font-size:13px;line-height:1.6">${esc(lines.join('\n'))}</div>`
+                + `<div style="text-align:right;margin-top:14px">`
+                + `<button class="btn btn-primary" onclick="closeModal()">Đóng</button></div>`;
+            showInfoModal(`📊 Kết quả nhập: ${file.name}`, body);
         }
 
         if (data.success > 0) {
