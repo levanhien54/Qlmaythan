@@ -411,6 +411,12 @@ def api_ban_giao_export_pdf():
             from reportlab.pdfbase.pdfmetrics import Font as _StdFont
             pdfmetrics.registerFont(_StdFont('ArialVN', 'Helvetica', 'WinAnsiEncoding'))
             pdfmetrics.registerFont(_StdFont('ArialVN-Bold', 'Helvetica-Bold', 'WinAnsiEncoding'))
+        # Khai báo HỌ font để reportlab map được normal/bold (nếu thiếu sẽ lỗi
+        # "Can't map determine family/bold/italic" khi dùng style in đậm).
+        pdfmetrics.registerFontFamily(
+            'ArialVN', normal='ArialVN', bold='ArialVN-Bold',
+            italic='ArialVN', boldItalic='ArialVN-Bold',
+        )
 
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=landscape(A4),
