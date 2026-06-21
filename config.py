@@ -9,6 +9,11 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DATA_DIR, "ql_may_than.db")
 
+# === Sao lưu & log ===
+BACKUP_DIR = os.path.join(DATA_DIR, "backups")   # bản sao lưu DB (chứa dữ liệu BN → gitignore)
+BACKUP_KEEP = 10                                  # giữ N bản sao lưu gần nhất
+LOG_PATH = os.path.join(DATA_DIR, "app.log")      # log lỗi (có thể chứa dữ liệu BN → gitignore)
+
 # === File Excel nguồn ===
 EXCEL_THIET_BI = os.path.join(BASE_DIR, "Bảng tính không có tiêu đề.xlsx")
 EXCEL_PHIEN_DT = os.path.join(BASE_DIR, "011.3.xls")

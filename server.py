@@ -11,12 +11,22 @@ if sys.platform == 'win32':
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import logging
+from logging.handlers import RotatingFileHandler
+
 from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 from database.models import create_all_tables
 from database.queries import thiet_bi, nhan_vien, bao_duong, phien_dieu_tri, ban_giao
-from config import TAN_SUAT, LOAI_BAO_DUONG, TRANG_THAI_BAO_DUONG, CHUC_VU
+from config import TAN_SUAT, LOAI_BAO_DUONG, TRANG_THAI_BAO_DUONG, CHUC_VU, LOG_PATH, DATA_DIR
 from excel_import import parse_workbook, import_sessions, preview_sessions, ExcelParseError
+
+# ---------- Logging ra file (xoay vòng) — chẩn đoán sự cố sau này ----------
+os.makedirs(DATA_DIR, exist_ok=True)
+_handler = RotatingFileHandler(LOG_PATH, maxBytes=2 * 1024 * 1024, backupCount=5, encoding='utf-8')
+_handler.setFormatter(logging.Formatter('%(asctime)s [%(levelname)s] %(message)s'))
+logging.basicConfig(level=logging.INFO, handlers=[_handler])
+log = logging.getLogger('qlmaythan')
 
 app = Flask(__name__, static_folder='web', static_url_path='')
 CORS(app)
@@ -545,8 +555,6 @@ def api_statistics():
 @app.route('/api/phien-dieu-tri/import-excel', methods=['POST'])
 def api_import_excel():
     """Import treatment sessions from Excel file (.xls/.xlsx) with strict validation."""
-    import traceback
-
     try:
         # ===== FILE-LEVEL VALIDATION =====
         if 'file' not in request.files:
@@ -584,18 +592,14 @@ def api_import_excel():
         })
 
     except Exception as e:
-        return jsonify({
-            'ok': False,
-            'error': f'Lỗi hệ thống: {str(e)}',
-            'trace': traceback.format_exc()
-        }), 500
+        log.exception('Import Excel lỗi')   # traceback vào log, KHÔNG trả về client
+        return jsonify({'ok': False, 'error': f'Lỗi hệ thống: {str(e)}'}), 500
 
 
 @app.route('/api/phien-dieu-tri/preview-excel', methods=['POST'])
 def api_preview_excel():
     """Xem trước import: parse + validate + map từng dòng nhưng KHÔNG ghi DB.
     Dùng để người dùng kiểm tra trước khi xác nhận nhập thật."""
-    import traceback
     try:
         if 'file' not in request.files:
             return jsonify({'ok': False, 'error': 'Không tìm thấy file trong request'}), 400
@@ -617,11 +621,16 @@ def api_preview_excel():
         plan = preview_sessions(rows_data, datemode)
         return jsonify({'ok': True, **plan})
     except Exception as e:
-        return jsonify({'ok': False, 'error': f'Lỗi hệ thống: {str(e)}',
-                        'trace': traceback.format_exc()}), 500
+        log.exception('Preview Excel lỗi')   # traceback vào log, KHÔNG trả về client
+        return jsonify({'ok': False, 'error': f'Lỗi hệ thống: {str(e)}'}), 500
 
 
 if __name__ == '__main__':
+    # Sao lưu DB hiện có TRƯỚC khi chạy migration/import (an toàn nếu có sự cố).
+    from database.backup import safe_backup_on_startup
+    _bak = safe_backup_on_startup()
+    if _bak:
+        print(f"[Backup] ✓ {_bak}")
     create_all_tables()
     try:
         from import_data import run_import

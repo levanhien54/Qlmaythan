@@ -58,6 +58,14 @@ def main():
     splash.show()
     app.processEvents()
 
+    # Sao lưu DB hiện có trước khi tạo bảng/migration (an toàn nếu có sự cố)
+    try:
+        from database.backup import safe_backup_on_startup
+        safe_backup_on_startup()
+    except Exception as e:
+        print(f"[Backup] {e}")
+    app.processEvents()
+
     # Create DB tables
     create_all_tables()
     app.processEvents()

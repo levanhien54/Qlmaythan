@@ -24,6 +24,11 @@ data/*.db-wal
 data/*.db-shm
 data/*.bak*
 
+# Sao lưu tự động + log (chứa dữ liệu bệnh nhân → KHÔNG đẩy lên repo công khai)
+data/backups/
+data/*.log
+data/*.log.*
+
 # Dữ liệu BỆNH NHÂN THẬT — KHÔNG đẩy lên repo công khai (bảo mật hồ sơ y tế).
 # App đọc các file này qua config.EXCEL_*; người dùng tự cấp file của mình.
 *.xls
