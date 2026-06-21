@@ -81,6 +81,15 @@ python server.py
 python main.py
 ```
 
+### Đóng gói thành .exe (Windows)
+
+```bash
+python scripts/build_exe.py
+```
+Tạo `dist/QuanLyMayThan.exe` — chạy độc lập, **không cần cài Python**. Dữ liệu
+(DB, `backups/`, `app.log`) tạo trong thư mục `data/` **cạnh file exe** lúc chạy
+(bền vững & ghi được). Sao chép `QuanLyMayThan.exe` tới máy đích là dùng được.
+
 ## Kiểm thử
 
 ```bash

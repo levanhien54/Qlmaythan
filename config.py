@@ -3,9 +3,16 @@
 Cấu hình ứng dụng Quản lý Máy Chạy Thận
 """
 import os
+import sys
 
 # === Đường dẫn ===
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# Khi chạy từ .exe (PyInstaller, sys.frozen): đặt dữ liệu CẠNH file exe để bền
+# vững & ghi được. _MEIPASS (thư mục giải nén tạm) chỉ-đọc và bị xóa khi thoát,
+# nên KHÔNG đặt DB ở đó. Khi chạy mã nguồn bình thường: dùng thư mục dự án.
+if getattr(sys, "frozen", False):
+    BASE_DIR = os.path.dirname(sys.executable)
+else:
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "data")
 DB_PATH = os.path.join(DATA_DIR, "ql_may_than.db")
 
